@@ -1,11 +1,7 @@
 package chess_engine
 
-import (
-	"fmt"
-)
-
 type Board struct {
-	board [4]int
+	board [4]uint64
 	extra uint32
 }
 
@@ -63,46 +59,33 @@ func (b *Board) MovePiece(from, to int) *Board {
 	nb.RemovePiece(from)
 
 	// Next player to move
-	fmt.Println(nb.extra)
-	nb.extra |= 1
-	fmt.Println(nb.extra)
+	nb.extra ^= 1
 
 	return nb
 }
 
-func (b *Board) SetPiece(piece int, index int) {
+func (b *Board) SetPiece(piece uint64, index int) {
 	i := index / 16
 	m := index % 16
 
 	p := piece << (m * 4)
 	b.board[i] = b.board[i] | p
-
-	// fmt.Println(i)
-	// fmt.Println(m)
-	// fmt.Printf("%b\n", piece)
-	// fmt.Printf("%b\n", p)
-	// fmt.Printf("%b\n", b.board[i])
 }
 
 func (b *Board) RemovePiece(index int) {
 	i := index / 16
 	m := index % 16
 
-	p := int(0b000 << (m - 1))
+	p := uint64(0b000 << (m - 1))
 	b.board[i] = b.board[i] & p
 }
 
-func (b *Board) Piece(index int) int {
+func (b *Board) Piece(index int) uint64 {
 	i := index / 16
 	m := index % 16
 
-	p := int(0b1111 << (m * 4))
+	p := uint64(0b1111 << (m * 4))
 	piece := b.board[i] & p >> (m * 4)
-
-	fmt.Println(i)
-	fmt.Println(m)
-	fmt.Printf("%b\n", p)
-	fmt.Printf("%b\n", piece)
 
 	return piece
 }
@@ -111,15 +94,10 @@ func (b *Board) Color(index int) int {
 	i := index / 16
 	m := index % 16
 
-	p := int(0b1000 << (m * 4))
+	p := uint64(0b1000 << (m * 4))
 	c := b.board[i] & p >> (m*4 + 3)
 
-	// fmt.Println(i)
-	// fmt.Println(m)
-	// fmt.Printf("%b\n", p)
-	// fmt.Printf("%b\n", c)
-
-	return c
+	return int(c)
 }
 
 func (b *Board) ToMove() int {

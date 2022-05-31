@@ -6,34 +6,56 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBoard_SetPiece(t *testing.T) {
+func TestNewEmptyBoard(t *testing.T) {
 	b := NewBoard(false)
 
-	b.SetPiece(pieceWhiteKing, 1)
-	assert.Equal(t, pieceWhiteKing, b.Piece(1))
-	assert.Equal(t, colorWhite, b.Color(1))
+	assert.NotNil(t, b)
+	for i := 0; i < 63; i++ {
+		assert.Equal(t, pieceNone, b.Piece(i))
+	}
+}
 
-	b.SetPiece(pieceBlackKing, 9)
-	assert.Equal(t, pieceBlackKing, b.Piece(9))
-	assert.Equal(t, colorBlack, b.Color(9))
+func TestNewBoard(t *testing.T) {
+	b := NewBoard(true)
 
-	b.SetPiece(pieceBlackRook, 16)
-	assert.Equal(t, pieceBlackRook, b.Piece(16))
-	assert.Equal(t, colorBlack, b.Color(16))
+	assert.NotNil(t, b)
+	assert.Equal(t, pieceBlackRook, b.Piece(alg("A8")))
+	assert.Equal(t, pieceBlackKnight, b.Piece(alg("B8")))
+	assert.Equal(t, pieceBlackBishop, b.Piece(alg("C8")))
+	assert.Equal(t, pieceBlackQueen, b.Piece(alg("D8")))
+	assert.Equal(t, pieceBlackKing, b.Piece(alg("E8")))
+	assert.Equal(t, pieceBlackBishop, b.Piece(alg("F8")))
+	assert.Equal(t, pieceBlackKnight, b.Piece(alg("G8")))
+	assert.Equal(t, pieceBlackRook, b.Piece(alg("H8")))
 
-	b.SetPiece(pieceWhiteBishop, 63)
-	assert.Equal(t, pieceWhiteBishop, b.Piece(63))
-	assert.Equal(t, colorWhite, b.Color(63))
+	for i := 0; i < 8; i++ {
+		assert.Equal(t, pieceBlackPawn, b.Piece(48+i))
+		assert.Equal(t, pieceNone, b.Piece(40+i))
+		assert.Equal(t, pieceNone, b.Piece(32+i))
+		assert.Equal(t, pieceNone, b.Piece(24+i))
+		assert.Equal(t, pieceNone, b.Piece(16+i))
+		assert.Equal(t, pieceWhitePawn, b.Piece(8+i))
+	}
+
+	assert.Equal(t, pieceWhiteRook, b.Piece(alg("A1")))
+	assert.Equal(t, pieceWhiteKnight, b.Piece(alg("B1")))
+	assert.Equal(t, pieceWhiteBishop, b.Piece(alg("C1")))
+	assert.Equal(t, pieceWhiteQueen, b.Piece(alg("D1")))
+	assert.Equal(t, pieceWhiteKing, b.Piece(alg("E1")))
+	assert.Equal(t, pieceWhiteBishop, b.Piece(alg("F1")))
+	assert.Equal(t, pieceWhiteKnight, b.Piece(alg("G1")))
+	assert.Equal(t, pieceWhiteRook, b.Piece(alg("H1")))
 }
 
 func TestBoard_Copy(t *testing.T) {
 	b := NewBoard(false)
-	b.SetPiece(pieceWhiteBishop, 34)
-	b.SetPiece(pieceWhiteKing, 36)
-	b.SetPiece(pieceBlackKing, 43)
+	b.SetPiece(pieceWhiteBishop, alg("B4"))
+	b.SetPiece(pieceWhiteKing, alg("C5"))
+	b.SetPiece(pieceBlackKing, alg("C8"))
 
 	nb := b.Copy()
 
+	assert.NotNil(t, nb)
 	assert.Equal(t, nb.board[0], b.board[0])
 	assert.Equal(t, nb.board[1], b.board[1])
 	assert.Equal(t, nb.board[2], b.board[2])
@@ -43,28 +65,67 @@ func TestBoard_Copy(t *testing.T) {
 
 func TestBoard_MovePiece(t *testing.T) {
 	b := NewBoard(false)
-	b.SetPiece(pieceWhiteBishop, 34)
-	b.SetPiece(pieceWhiteKing, 36)
-	b.SetPiece(pieceBlackKing, 43)
+	b.SetPiece(pieceWhiteBishop, alg("D6"))
+	b.SetPiece(pieceWhiteKing, alg("D5"))
+	b.SetPiece(pieceBlackKing, alg("E7"))
 
-	nb := b.MovePiece(36, 52)
+	nb := b.MovePiece(alg("E7"), alg("B2"))
 
 	assert.NotEqual(t, nb.ToMove(), b.ToMove())
-	assert.Equal(t, nb.board[0], b.board[0])
+	assert.NotEqual(t, nb.board[0], b.board[0])
 	assert.Equal(t, nb.board[1], b.board[1])
-	assert.NotEqual(t, nb.board[2], b.board[2])
+	assert.Equal(t, nb.board[2], b.board[2])
 	assert.NotEqual(t, nb.board[3], b.board[3])
 }
 
-func TestNewBoard(t *testing.T) {
-	b := NewBoard(true)
+func TestBoard_SetPiece(t *testing.T) {
+	b := NewBoard(false)
 
-	assert.Equal(t, pieceBlackRook, b.Piece(56))
-	assert.Equal(t, pieceBlackKnight, b.Piece(57))
-	assert.Equal(t, pieceBlackBishop, b.Piece(58))
-	assert.Equal(t, pieceBlackQueen, b.Piece(59))
-	assert.Equal(t, pieceBlackKing, b.Piece(60))
-	assert.Equal(t, pieceBlackBishop, b.Piece(61))
-	assert.Equal(t, pieceBlackKnight, b.Piece(62))
-	assert.Equal(t, pieceBlackRook, b.Piece(63))
+	b.SetPiece(pieceWhiteKing, alg("B1"))
+	assert.Equal(t, pieceWhiteKing, b.Piece(alg("B1")))
+	assert.Equal(t, colorWhite, b.Color(alg("B1")))
+
+	b.SetPiece(pieceBlackKing, alg("B2"))
+	assert.Equal(t, pieceBlackKing, b.Piece(alg("B2")))
+	assert.Equal(t, colorBlack, b.Color(alg("B2")))
+
+	b.SetPiece(pieceBlackRook, alg("D6"))
+	assert.Equal(t, pieceBlackRook, b.Piece(alg("D6")))
+	assert.Equal(t, colorBlack, b.Color(alg("D6")))
+
+	b.SetPiece(pieceWhiteBishop, alg("H8"))
+	assert.Equal(t, pieceWhiteBishop, b.Piece(alg("H8")))
+	assert.Equal(t, colorWhite, b.Color(alg("H8")))
+}
+
+func TestBoard_ToMove(t *testing.T) {
+	b := NewBoard(true)
+	assert.Equal(t, colorWhite, b.ToMove())
+
+	nb := b.MovePiece(alg("A2"), alg("A4"))
+	assert.Equal(t, colorBlack, nb.ToMove())
+
+	b = nb.MovePiece(alg("H7"), alg("H5"))
+	assert.Equal(t, colorWhite, b.ToMove())
+}
+
+func TestBoard_Alg(t *testing.T) {
+	type args struct {
+		alg string
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{"A1", args{"A1"}, 0},
+		{"A3", args{"A3"}, 16},
+		{"F4", args{"F4"}, 29},
+		{"H8", args{"H8"}, 63},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, alg(tt.args.alg), "alg(%v)", tt.args.alg)
+		})
+	}
 }
