@@ -95,12 +95,12 @@ func (b *Board) MovePiece(from, to int) *Board {
 	return nb
 }
 
-func (b *Board) SetPiece(piece uint64, index int) {
+func (b *Board) SetPiece(piece piece, index int) {
 	i := index / 16
 	m := index % 16
 
 	p := piece << (m * 4)
-	b.board[i] = b.board[i] | p
+	b.board[i] = b.board[i] | uint64(p)
 }
 
 func (b *Board) RemovePiece(index int) {
@@ -111,14 +111,14 @@ func (b *Board) RemovePiece(index int) {
 	b.board[i] = b.board[i] & p
 }
 
-func (b *Board) Piece(index int) uint64 {
+func (b *Board) Piece(index int) piece {
 	i := index / 16
 	m := index % 16
 
 	p := uint64(0b1111 << (m * 4))
-	piece := b.board[i] & p >> (m * 4)
+	p2 := b.board[i] & p >> (m * 4)
 
-	return piece
+	return piece(p2)
 }
 
 func (b *Board) Color(index int) color {
