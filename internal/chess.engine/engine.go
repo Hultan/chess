@@ -40,6 +40,7 @@ func NewBoard(setup bool) *Board {
 		b.SetPiece(pieceWhiteRook, 7)
 
 		b.resetCastlingRights()
+		b.setMoveCount(1)
 	}
 
 	return b
@@ -138,33 +139,32 @@ func (b *Board) ToMove() color {
 func (b *Board) toggleToMove() color {
 	b.extra ^= 1 // Switch color to move
 
-	b.setMoveCount(b.MoveCount() + 1)
+	if b.ToMove() == colorWhite {
+		b.setMoveCount(b.MoveCount() + 1)
+	}
 
 	return b.ToMove()
 }
 
 func (b *Board) MoveCount() int {
-	return int(b.extra & (0b11111111_11111111 << 16))
+	return int((b.extra & (0b11111111_11111111 << 16)) >> 16)
 }
 
 func (b *Board) setMoveCount(c int) {
-	// b.extra &= 0b00000000_00000000 << 16
-	// b.extra |= uint32(c) << 16
+	b.extra &= 0b00000000_00000000_11111111_11111111
+	b.extra |= uint32(c) << 16
 }
 
 func (b *Board) CastlingRights(c castlingRight) bool {
 	switch c {
 	case castlingWhiteKing:
-		// fmt.Printf("%16b\n", b.extra)
-		// fmt.Printf("%16b\n", 0b1<<8)
-		// fmt.Printf("%b\n", b.extra&(0b1<<8))
-		return (b.extra & (0b1 << 8)) > 1
+		return b.extra&0b00000001_00000000 > 1
 	case castlingWhiteQueen:
-		return b.extra&(0b1<<9) > 1
+		return b.extra&0b00000010_00000000 > 1
 	case castlingBlackKing:
-		return b.extra&(0b1<<10) > 1
+		return b.extra&0b00000100_00000000 > 1
 	case castlingBlackQueen:
-		return b.extra&(0b1<<11) > 1
+		return b.extra&0b00001000_00000000 > 1
 	default:
 		return false
 	}
@@ -173,9 +173,7 @@ func (b *Board) CastlingRights(c castlingRight) bool {
 func (b *Board) removeCastlingRights(c castlingRight) {
 	switch c {
 	case castlingWhiteKing:
-		// fmt.Printf("%16b\n", b.extra)
 		b.extra &= 0b11111111_11111111_11111110_11111111
-		// fmt.Printf("%16b\n", b.extra)
 	case castlingWhiteQueen:
 		b.extra &= 0b11111111_11111111_11111101_11111111
 	case castlingBlackKing:
@@ -187,5 +185,5 @@ func (b *Board) removeCastlingRights(c castlingRight) {
 }
 
 func (b *Board) resetCastlingRights() {
-	b.extra |= 0b1111 << 8
+	b.extra |= 0b1111_00000000
 }

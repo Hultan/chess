@@ -201,3 +201,16 @@ func TestBoard_BlackCastlingRights(t *testing.T) {
 	assert.Equal(t, false, nb.CastlingRights(castlingBlackKing))
 	assert.Equal(t, false, nb.CastlingRights(castlingBlackQueen))
 }
+
+func TestBoard_MoveCount(t *testing.T) {
+	b := NewBoard(true)
+	assert.Equal(t, 1, b.MoveCount())
+	b = b.MovePiece(0, 8)
+	assert.Equal(t, 1, b.MoveCount())
+	b = b.MovePiece(63, 55)
+	assert.Equal(t, 2, b.MoveCount())
+	b = b.MovePiece(1, 9)
+	assert.Equal(t, 2, b.MoveCount())
+	b = b.MovePiece(62, 54)
+	assert.Equal(t, 3, b.MoveCount())
+}
