@@ -1,5 +1,12 @@
 package chess_engine
 
+// Board represents a chess board
+//  - board - each uint64 contains the piece and color of two ranks
+//  - extra - bit 0 - color to move
+//          - bit 1-7 - half move count, since last capture or pawn advance
+//          - bit 8-11 - castling rights : WK,WQ,BK,BQ
+//          - bit 12-15 - en passant target, can only occur on 16 squares
+//          - bit 16-31 - move count
 type Board struct {
 	board [4]uint64
 	extra uint32
@@ -31,6 +38,8 @@ func NewBoard(setup bool) *Board {
 		b.SetPiece(pieceWhiteBishop, 5)
 		b.SetPiece(pieceWhiteKnight, 6)
 		b.SetPiece(pieceWhiteRook, 7)
+
+		b.resetCastlingRights()
 	}
 
 	return b
@@ -58,8 +67,30 @@ func (b *Board) MovePiece(from, to int) *Board {
 	nb.SetPiece(p, to)
 	nb.RemovePiece(from)
 
+	// Castling
+	if from == 0 {
+		nb.removeCastlingRights(castlingWhiteQueen)
+	}
+	if from == 7 {
+		nb.removeCastlingRights(castlingWhiteKing)
+	}
+	if from == 4 {
+		nb.removeCastlingRights(castlingWhiteKing)
+		nb.removeCastlingRights(castlingWhiteQueen)
+	}
+	if from == 56 {
+		nb.removeCastlingRights(castlingBlackQueen)
+	}
+	if from == 63 {
+		nb.removeCastlingRights(castlingBlackKing)
+	}
+	if from == 60 {
+		nb.removeCastlingRights(castlingBlackKing)
+		nb.removeCastlingRights(castlingBlackQueen)
+	}
+
 	// Next player to move
-	nb.extra ^= 1
+	nb.toggleToMove()
 
 	return nb
 }
@@ -76,7 +107,7 @@ func (b *Board) RemovePiece(index int) {
 	i := index / 16
 	m := index % 16
 
-	p := uint64(0b000 << (m - 1))
+	p := uint64(0b000 << m)
 	b.board[i] = b.board[i] & p
 }
 
@@ -90,16 +121,71 @@ func (b *Board) Piece(index int) uint64 {
 	return piece
 }
 
-func (b *Board) Color(index int) int {
+func (b *Board) Color(index int) color {
 	i := index / 16
 	m := index % 16
 
 	p := uint64(0b1000 << (m * 4))
 	c := b.board[i] & p >> (m*4 + 3)
 
-	return int(c)
+	return color(c)
 }
 
-func (b *Board) ToMove() int {
-	return int(b.extra & 1)
+func (b *Board) ToMove() color {
+	return color(b.extra & 1)
+}
+
+func (b *Board) toggleToMove() color {
+	b.extra ^= 1 // Switch color to move
+
+	b.setMoveCount(b.MoveCount() + 1)
+
+	return b.ToMove()
+}
+
+func (b *Board) MoveCount() int {
+	return int(b.extra & (0b11111111_11111111 << 16))
+}
+
+func (b *Board) setMoveCount(c int) {
+	// b.extra &= 0b00000000_00000000 << 16
+	// b.extra |= uint32(c) << 16
+}
+
+func (b *Board) CastlingRights(c castlingRight) bool {
+	switch c {
+	case castlingWhiteKing:
+		// fmt.Printf("%16b\n", b.extra)
+		// fmt.Printf("%16b\n", 0b1<<8)
+		// fmt.Printf("%b\n", b.extra&(0b1<<8))
+		return (b.extra & (0b1 << 8)) > 1
+	case castlingWhiteQueen:
+		return b.extra&(0b1<<9) > 1
+	case castlingBlackKing:
+		return b.extra&(0b1<<10) > 1
+	case castlingBlackQueen:
+		return b.extra&(0b1<<11) > 1
+	default:
+		return false
+	}
+}
+
+func (b *Board) removeCastlingRights(c castlingRight) {
+	switch c {
+	case castlingWhiteKing:
+		// fmt.Printf("%16b\n", b.extra)
+		b.extra &= 0b11111111_11111111_11111110_11111111
+		// fmt.Printf("%16b\n", b.extra)
+	case castlingWhiteQueen:
+		b.extra &= 0b11111111_11111111_11111101_11111111
+	case castlingBlackKing:
+		b.extra &= 0b11111111_11111111_11111011_11111111
+	case castlingBlackQueen:
+		b.extra &= 0b11111111_11111111_11110111_11111111
+	default:
+	}
+}
+
+func (b *Board) resetCastlingRights() {
+	b.extra |= 0b1111 << 8
 }

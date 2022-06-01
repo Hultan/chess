@@ -129,3 +129,75 @@ func TestBoard_Alg(t *testing.T) {
 		})
 	}
 }
+
+func TestBoard_ToggleToMove(t *testing.T) {
+	b := NewBoard(true)
+
+	assert.Equal(t, colorWhite, b.ToMove())
+	b.toggleToMove()
+	assert.Equal(t, colorBlack, b.ToMove())
+	b.toggleToMove()
+	assert.Equal(t, colorWhite, b.ToMove())
+}
+
+func TestBoard_WhiteCastlingRights(t *testing.T) {
+	b := NewBoard(true)
+
+	assert.Equal(t, true, b.CastlingRights(castlingWhiteKing))
+	assert.Equal(t, true, b.CastlingRights(castlingWhiteQueen))
+	assert.Equal(t, true, b.CastlingRights(castlingBlackKing))
+	assert.Equal(t, true, b.CastlingRights(castlingBlackQueen))
+
+	nb := b.MovePiece(7, 23)
+
+	assert.Equal(t, false, nb.CastlingRights(castlingWhiteKing))
+	assert.Equal(t, true, nb.CastlingRights(castlingWhiteQueen))
+	assert.Equal(t, true, nb.CastlingRights(castlingBlackKing))
+	assert.Equal(t, true, nb.CastlingRights(castlingBlackQueen))
+
+	nb = nb.MovePiece(0, 16)
+
+	assert.Equal(t, false, nb.CastlingRights(castlingWhiteKing))
+	assert.Equal(t, false, nb.CastlingRights(castlingWhiteQueen))
+	assert.Equal(t, true, nb.CastlingRights(castlingBlackKing))
+	assert.Equal(t, true, nb.CastlingRights(castlingBlackQueen))
+
+	nb.resetCastlingRights()
+	nb = nb.MovePiece(4, 20)
+
+	assert.Equal(t, false, nb.CastlingRights(castlingWhiteKing))
+	assert.Equal(t, false, nb.CastlingRights(castlingWhiteQueen))
+	assert.Equal(t, true, nb.CastlingRights(castlingBlackKing))
+	assert.Equal(t, true, nb.CastlingRights(castlingBlackQueen))
+}
+
+func TestBoard_BlackCastlingRights(t *testing.T) {
+	b := NewBoard(true)
+
+	assert.Equal(t, true, b.CastlingRights(castlingWhiteKing))
+	assert.Equal(t, true, b.CastlingRights(castlingWhiteQueen))
+	assert.Equal(t, true, b.CastlingRights(castlingBlackKing))
+	assert.Equal(t, true, b.CastlingRights(castlingBlackQueen))
+
+	nb := b.MovePiece(63, 55)
+
+	assert.Equal(t, true, nb.CastlingRights(castlingWhiteKing))
+	assert.Equal(t, true, nb.CastlingRights(castlingWhiteQueen))
+	assert.Equal(t, false, nb.CastlingRights(castlingBlackKing))
+	assert.Equal(t, true, nb.CastlingRights(castlingBlackQueen))
+
+	nb = nb.MovePiece(56, 48)
+
+	assert.Equal(t, true, nb.CastlingRights(castlingWhiteKing))
+	assert.Equal(t, true, nb.CastlingRights(castlingWhiteQueen))
+	assert.Equal(t, false, nb.CastlingRights(castlingBlackKing))
+	assert.Equal(t, false, nb.CastlingRights(castlingBlackQueen))
+
+	nb.resetCastlingRights()
+	nb = nb.MovePiece(60, 44)
+
+	assert.Equal(t, true, nb.CastlingRights(castlingWhiteKing))
+	assert.Equal(t, true, nb.CastlingRights(castlingWhiteQueen))
+	assert.Equal(t, false, nb.CastlingRights(castlingBlackKing))
+	assert.Equal(t, false, nb.CastlingRights(castlingBlackQueen))
+}

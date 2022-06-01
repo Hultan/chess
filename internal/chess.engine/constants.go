@@ -1,7 +1,8 @@
 package chess_engine
 
 const (
-	pieceNone        uint64 = 0b0000
+	pieceNone uint64 = 0b0000
+
 	pieceWhitePawn   uint64 = 0b0001
 	pieceWhiteBishop uint64 = 0b0010
 	pieceWhiteKnight uint64 = 0b0011
@@ -17,7 +18,18 @@ const (
 	pieceBlackKing   uint64 = 0b1110
 )
 
+type color int
+
 const (
-	colorWhite int = 0b0
-	colorBlack int = 0b1
+	colorWhite color = 0b0
+	colorBlack color = 0b1
+)
+
+type castlingRight int
+
+const (
+	castlingWhiteKing castlingRight = iota
+	castlingWhiteQueen
+	castlingBlackKing
+	castlingBlackQueen
 )
