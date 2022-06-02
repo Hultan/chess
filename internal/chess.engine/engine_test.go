@@ -13,6 +13,14 @@ func TestNewEmptyBoard(t *testing.T) {
 	for i := 0; i < 63; i++ {
 		assert.Equal(t, pieceNone, b.Piece(i))
 	}
+
+	// Extra
+	assert.Equal(t, colorWhite, b.ToMove())
+	assert.Equal(t, true, b.CastlingRights(castlingWhiteKing))
+	assert.Equal(t, true, b.CastlingRights(castlingWhiteQueen))
+	assert.Equal(t, true, b.CastlingRights(castlingBlackKing))
+	assert.Equal(t, true, b.CastlingRights(castlingBlackQueen))
+	assert.Equal(t, 1, b.MoveCount())
 }
 
 func TestNewBoard(t *testing.T) {
@@ -45,6 +53,14 @@ func TestNewBoard(t *testing.T) {
 	assert.Equal(t, pieceWhiteBishop, b.Piece(alg("F1")))
 	assert.Equal(t, pieceWhiteKnight, b.Piece(alg("G1")))
 	assert.Equal(t, pieceWhiteRook, b.Piece(alg("H1")))
+
+	// Extra
+	assert.Equal(t, colorWhite, b.ToMove())
+	assert.Equal(t, true, b.CastlingRights(castlingWhiteKing))
+	assert.Equal(t, true, b.CastlingRights(castlingWhiteQueen))
+	assert.Equal(t, true, b.CastlingRights(castlingBlackKing))
+	assert.Equal(t, true, b.CastlingRights(castlingBlackQueen))
+	assert.Equal(t, 1, b.MoveCount())
 }
 
 func TestBoard_Copy(t *testing.T) {

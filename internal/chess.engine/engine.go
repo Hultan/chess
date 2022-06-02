@@ -38,10 +38,11 @@ func NewBoard(setup bool) *Board {
 		b.SetPiece(pieceWhiteBishop, 5)
 		b.SetPiece(pieceWhiteKnight, 6)
 		b.SetPiece(pieceWhiteRook, 7)
-
-		b.resetCastlingRights()
-		b.setMoveCount(1)
 	}
+
+	// Extra
+	b.resetCastlingRights()
+	b.setMoveCount(1)
 
 	return b
 }
@@ -142,12 +143,13 @@ func (b *Board) toggleToMove() color {
 	if b.ToMove() == colorWhite {
 		b.setMoveCount(b.MoveCount() + 1)
 	}
+	// b.setHalfMoveCount(b.Half MoveCount() + 1)
 
 	return b.ToMove()
 }
 
 func (b *Board) MoveCount() int {
-	return int((b.extra & (0b11111111_11111111 << 16)) >> 16)
+	return int((b.extra & 0b11111111_11111111_00000000_00000000) >> 16)
 }
 
 func (b *Board) setMoveCount(c int) {
