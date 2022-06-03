@@ -17,31 +17,31 @@ func (b *Board) print() string {
 
 func (b *Board) getPieceLetter(p Piece) string {
 	switch p {
-	case pieceNone:
+	case PieceNone:
 		return " "
-	case pieceWhitePawn:
+	case PieceWhitePawn:
 		return "P"
-	case pieceWhiteBishop:
+	case PieceWhiteBishop:
 		return "B"
-	case pieceWhiteKnight:
+	case PieceWhiteKnight:
 		return "N"
-	case pieceWhiteRook:
+	case PieceWhiteRook:
 		return "R"
-	case pieceWhiteQueen:
+	case PieceWhiteQueen:
 		return "Q"
-	case pieceWhiteKing:
+	case PieceWhiteKing:
 		return "K"
-	case pieceBlackPawn:
+	case PieceBlackPawn:
 		return "p"
-	case pieceBlackBishop:
+	case PieceBlackBishop:
 		return "b"
-	case pieceBlackKnight:
+	case PieceBlackKnight:
 		return "n"
-	case pieceBlackRook:
+	case PieceBlackRook:
 		return "r"
-	case pieceBlackQueen:
+	case PieceBlackQueen:
 		return "q"
-	case pieceBlackKing:
+	case PieceBlackKing:
 		return "k"
 	default:
 		panic("invalid piece in getPieceLetter()")

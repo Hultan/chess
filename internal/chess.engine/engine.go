@@ -20,28 +20,28 @@ func NewBoard(setup bool) *Board {
 	b := &Board{}
 
 	if setup {
-		b.setPiece(pieceBlackRook, 56)
-		b.setPiece(pieceBlackKnight, 57)
-		b.setPiece(pieceBlackBishop, 58)
-		b.setPiece(pieceBlackQueen, 59)
-		b.setPiece(pieceBlackKing, 60)
-		b.setPiece(pieceBlackBishop, 61)
-		b.setPiece(pieceBlackKnight, 62)
-		b.setPiece(pieceBlackRook, 63)
+		b.setPiece(PieceBlackRook, 56)
+		b.setPiece(PieceBlackKnight, 57)
+		b.setPiece(PieceBlackBishop, 58)
+		b.setPiece(PieceBlackQueen, 59)
+		b.setPiece(PieceBlackKing, 60)
+		b.setPiece(PieceBlackBishop, 61)
+		b.setPiece(PieceBlackKnight, 62)
+		b.setPiece(PieceBlackRook, 63)
 
 		for i := 0; i < 8; i++ {
-			b.setPiece(pieceBlackPawn, 48+i)
-			b.setPiece(pieceWhitePawn, 8+i)
+			b.setPiece(PieceBlackPawn, 48+i)
+			b.setPiece(PieceWhitePawn, 8+i)
 		}
 
-		b.setPiece(pieceWhiteRook, 0)
-		b.setPiece(pieceWhiteKnight, 1)
-		b.setPiece(pieceWhiteBishop, 2)
-		b.setPiece(pieceWhiteQueen, 3)
-		b.setPiece(pieceWhiteKing, 4)
-		b.setPiece(pieceWhiteBishop, 5)
-		b.setPiece(pieceWhiteKnight, 6)
-		b.setPiece(pieceWhiteRook, 7)
+		b.setPiece(PieceWhiteRook, 0)
+		b.setPiece(PieceWhiteKnight, 1)
+		b.setPiece(PieceWhiteBishop, 2)
+		b.setPiece(PieceWhiteQueen, 3)
+		b.setPiece(PieceWhiteKing, 4)
+		b.setPiece(PieceWhiteBishop, 5)
+		b.setPiece(PieceWhiteKnight, 6)
+		b.setPiece(PieceWhiteRook, 7)
 	}
 
 	// Extra
@@ -76,11 +76,11 @@ func (b *Board) MovePiece(from, to int) *Board {
 	if f != b.ToMove() {
 		panic("moving out of turn")
 	}
-	if t != colorNone && f == t {
+	if t != ColorNone && f == t {
 		panic("can't capture own piece")
 	}
 
-	if b.Piece(from) == pieceNone {
+	if b.Piece(from) == PieceNone {
 		panic("can't move a none piece")
 	}
 
@@ -94,38 +94,38 @@ func (b *Board) MovePiece(from, to int) *Board {
 
 	// Castling
 	if from == 0 {
-		nb.removeCastlingRights(castlingWhiteQueen)
+		nb.removeCastlingRights(CastlingWhiteQueen)
 	}
 	if from == 7 {
-		nb.removeCastlingRights(castlingWhiteKing)
+		nb.removeCastlingRights(CastlingWhiteKing)
 	}
 	if from == 4 {
-		nb.removeCastlingRights(castlingWhiteKing)
-		nb.removeCastlingRights(castlingWhiteQueen)
+		nb.removeCastlingRights(CastlingWhiteKing)
+		nb.removeCastlingRights(CastlingWhiteQueen)
 	}
 	if from == 56 {
-		nb.removeCastlingRights(castlingBlackQueen)
+		nb.removeCastlingRights(CastlingBlackQueen)
 	}
 	if from == 63 {
-		nb.removeCastlingRights(castlingBlackKing)
+		nb.removeCastlingRights(CastlingBlackKing)
 	}
 	if from == 60 {
-		nb.removeCastlingRights(castlingBlackKing)
-		nb.removeCastlingRights(castlingBlackQueen)
+		nb.removeCastlingRights(CastlingBlackKing)
+		nb.removeCastlingRights(CastlingBlackQueen)
 	}
 
 	// Next player to move
 	nb.toggleToMove()
 
 	// Adjust move count
-	if nb.ToMove() == colorWhite {
+	if nb.ToMove() == ColorWhite {
 		nb.setMoveCount(nb.MoveCount() + 1)
 	}
 
 	// Adjust half move count
-	if b.Piece(from) == pieceWhitePawn || b.Piece(from) == pieceBlackPawn {
+	if b.Piece(from) == PieceWhitePawn || b.Piece(from) == PieceBlackPawn {
 		nb.setHalfMoveCount(0)
-	} else if b.Color(to) != colorNone && b.Color(from) != b.Color(to) {
+	} else if b.Color(to) != ColorNone && b.Color(from) != b.Color(to) {
 		nb.setHalfMoveCount(0)
 	} else {
 		nb.setHalfMoveCount(nb.HalfMoveCount() + 1)
@@ -167,14 +167,14 @@ func (b *Board) Piece(index int) Piece {
 func (b *Board) Color(index int) Color {
 	p := b.Piece(index)
 
-	if p == pieceNone {
-		return colorNone
+	if p == PieceNone {
+		return ColorNone
 	}
-	if p >= pieceWhitePawn && p <= pieceWhiteKing {
-		return colorWhite
+	if p >= PieceWhitePawn && p <= PieceWhiteKing {
+		return ColorWhite
 	}
-	if p >= pieceBlackPawn && p <= pieceBlackKing {
-		return colorBlack
+	if p >= PieceBlackPawn && p <= PieceBlackKing {
+		return ColorBlack
 	}
 
 	panic("invalid color")
@@ -186,9 +186,9 @@ func (b *Board) Color(index int) Color {
 
 func (b *Board) ToMove() Color {
 	if b.extra&1 == 0 {
-		return colorWhite
+		return ColorWhite
 	}
-	return colorBlack
+	return ColorBlack
 }
 
 func (b *Board) toggleToMove() Color {
@@ -229,13 +229,13 @@ func (b *Board) setHalfMoveCount(c int) {
 
 func (b *Board) CastlingRights(c castlingRight) bool {
 	switch c {
-	case castlingWhiteKing:
+	case CastlingWhiteKing:
 		return b.extra&0b00000001_00000000 > 1
-	case castlingWhiteQueen:
+	case CastlingWhiteQueen:
 		return b.extra&0b00000010_00000000 > 1
-	case castlingBlackKing:
+	case CastlingBlackKing:
 		return b.extra&0b00000100_00000000 > 1
-	case castlingBlackQueen:
+	case CastlingBlackQueen:
 		return b.extra&0b00001000_00000000 > 1
 	default:
 		return false
@@ -244,13 +244,13 @@ func (b *Board) CastlingRights(c castlingRight) bool {
 
 func (b *Board) removeCastlingRights(c castlingRight) {
 	switch c {
-	case castlingWhiteKing:
+	case CastlingWhiteKing:
 		b.extra &= 0b11111111_11111111_11111110_11111111
-	case castlingWhiteQueen:
+	case CastlingWhiteQueen:
 		b.extra &= 0b11111111_11111111_11111101_11111111
-	case castlingBlackKing:
+	case CastlingBlackKing:
 		b.extra &= 0b11111111_11111111_11111011_11111111
-	case castlingBlackQueen:
+	case CastlingBlackQueen:
 		b.extra &= 0b11111111_11111111_11110111_11111111
 	default:
 	}
