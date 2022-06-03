@@ -137,27 +137,6 @@ func TestBoard_ToMove(t *testing.T) {
 	assert.Equal(t, ColorWhite, b.ToMove())
 }
 
-func TestBoard_Alg(t *testing.T) {
-	type args struct {
-		alg string
-	}
-	tests := []struct {
-		name string
-		args args
-		want int
-	}{
-		{"A1", args{"A1"}, 0},
-		{"A3", args{"A3"}, 16},
-		{"F4", args{"F4"}, 29},
-		{"H8", args{"H8"}, 63},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, alg(tt.args.alg), "alg(%v)", tt.args.alg)
-		})
-	}
-}
-
 func TestBoard_ToggleToMove(t *testing.T) {
 	b := NewBoard(true)
 
