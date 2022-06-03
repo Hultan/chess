@@ -1,29 +1,29 @@
 package chess_engine
 
-type piece uint64
+type Piece uint64
 
 const (
-	pieceNone piece = 0b0000
+	pieceNone Piece = 0b0000
 
-	pieceWhitePawn   piece = 0b0001
-	pieceWhiteBishop piece = 0b0010
-	pieceWhiteKnight piece = 0b0011
-	pieceWhiteRook   piece = 0b0100
-	pieceWhiteQueen  piece = 0b0101
-	pieceWhiteKing   piece = 0b0110
+	pieceWhitePawn   Piece = 0b0001
+	pieceWhiteBishop Piece = 0b0010
+	pieceWhiteKnight Piece = 0b0011
+	pieceWhiteRook   Piece = 0b0100
+	pieceWhiteQueen  Piece = 0b0101
+	pieceWhiteKing   Piece = 0b0110
 
-	pieceBlackPawn   piece = 0b1001
-	pieceBlackBishop piece = 0b1010
-	pieceBlackKnight piece = 0b1011
-	pieceBlackRook   piece = 0b1100
-	pieceBlackQueen  piece = 0b1101
-	pieceBlackKing   piece = 0b1110
+	pieceBlackPawn   Piece = 0b1001
+	pieceBlackBishop Piece = 0b1010
+	pieceBlackKnight Piece = 0b1011
+	pieceBlackRook   Piece = 0b1100
+	pieceBlackQueen  Piece = 0b1101
+	pieceBlackKing   Piece = 0b1110
 )
 
-type color int
+type Color int
 
 const (
-	colorNone color = iota
+	colorNone Color = iota
 	colorWhite
 	colorBlack
 )

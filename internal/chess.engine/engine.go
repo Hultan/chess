@@ -138,7 +138,7 @@ func (b *Board) MovePiece(from, to int) *Board {
 // Manipulate board
 //
 
-func (b *Board) setPiece(piece piece, index int) {
+func (b *Board) setPiece(piece Piece, index int) {
 	i, m := index/16, index%16
 
 	b.board[i] = b.board[i] | uint64(piece<<(m*4))
@@ -154,17 +154,17 @@ func (b *Board) removePiece(index int) {
 // Get board info
 //
 
-func (b *Board) Piece(index int) piece {
+func (b *Board) Piece(index int) Piece {
 	i := index / 16
 	m := index % 16
 
 	p := uint64(0b1111 << (m * 4))
 	p2 := b.board[i] & p >> (m * 4)
 
-	return piece(p2)
+	return Piece(p2)
 }
 
-func (b *Board) Color(index int) color {
+func (b *Board) Color(index int) Color {
 	p := b.Piece(index)
 
 	if p == pieceNone {
@@ -184,14 +184,14 @@ func (b *Board) Color(index int) color {
 // Move
 //
 
-func (b *Board) ToMove() color {
+func (b *Board) ToMove() Color {
 	if b.extra&1 == 0 {
 		return colorWhite
 	}
 	return colorBlack
 }
 
-func (b *Board) toggleToMove() color {
+func (b *Board) toggleToMove() Color {
 	b.extra ^= 1 // Switch color to move
 
 	return b.ToMove()

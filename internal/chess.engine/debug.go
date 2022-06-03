@@ -15,7 +15,7 @@ func (b *Board) print() string {
 	return board
 }
 
-func (b *Board) getPieceLetter(p piece) string {
+func (b *Board) getPieceLetter(p Piece) string {
 	switch p {
 	case pieceNone:
 		return " "
