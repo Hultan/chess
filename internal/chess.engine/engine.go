@@ -1,5 +1,9 @@
 package chess_engine
 
+import (
+	"errors"
+)
+
 // Board represents a chess board
 //  - board - each uint64 contains the piece and color of two ranks
 //  - extra - bit 0 - color to move
@@ -11,10 +15,6 @@ type Board struct {
 	board [4]uint64
 	extra uint32
 }
-
-//
-// NewBoard
-//
 
 func NewBoard(setup bool) *Board {
 	b := &Board{}
@@ -52,10 +52,6 @@ func NewBoard(setup bool) *Board {
 	return b
 }
 
-//
-// Generate a new board
-//
-
 func (b *Board) Copy() *Board {
 	// Create a new board
 	nb := &Board{}
@@ -72,16 +68,8 @@ func (b *Board) Copy() *Board {
 }
 
 func (b *Board) MovePiece(from, to int) *Board {
-	f, t := b.Color(from), b.Color(to)
-	if f != b.ToMove() {
-		panic("moving out of turn")
-	}
-	if t != ColorNone && f == t {
-		panic("can't capture own piece")
-	}
-
-	if b.Piece(from) == PieceNone {
-		panic("can't move a none piece")
+	if e := b.checkValidMove(from, to); e != nil {
+		panic(e)
 	}
 
 	// Create a new board
@@ -93,70 +81,22 @@ func (b *Board) MovePiece(from, to int) *Board {
 	nb.removePiece(from)
 
 	// Castling
-	if from == 0 {
-		nb.removeCastlingRights(CastlingWhiteQueen)
-	}
-	if from == 7 {
-		nb.removeCastlingRights(CastlingWhiteKing)
-	}
-	if from == 4 {
-		nb.removeCastlingRights(CastlingWhiteKing)
-		nb.removeCastlingRights(CastlingWhiteQueen)
-	}
-	if from == 56 {
-		nb.removeCastlingRights(CastlingBlackQueen)
-	}
-	if from == 63 {
-		nb.removeCastlingRights(CastlingBlackKing)
-	}
-	if from == 60 {
-		nb.removeCastlingRights(CastlingBlackKing)
-		nb.removeCastlingRights(CastlingBlackQueen)
-	}
+	nb.checkCastling(from)
 
 	// Next player to move
 	nb.toggleToMove()
 
 	// Adjust move count
-	if nb.ToMove() == ColorWhite {
-		nb.setMoveCount(nb.MoveCount() + 1)
-	}
+	nb.increaseMoveCount()
 
 	// Adjust half move count
-	if b.Piece(from) == PieceWhitePawn || b.Piece(from) == PieceBlackPawn {
-		nb.setHalfMoveCount(0)
-	} else if b.Color(to) != ColorNone && b.Color(from) != b.Color(to) {
-		nb.setHalfMoveCount(0)
-	} else {
-		nb.setHalfMoveCount(nb.HalfMoveCount() + 1)
-	}
+	nb.increaseHalfMoveCount(b, from, to)
 
 	return nb
 }
 
-//
-// Manipulate board
-//
-
-func (b *Board) setPiece(piece Piece, index int) {
-	i, m := index/16, index%16
-
-	b.board[i] = b.board[i] | uint64(piece<<(m*4))
-}
-
-func (b *Board) removePiece(index int) {
-	i, m := index/16, index%16
-
-	b.board[i] &= ^uint64(0b1111 << (m * 4))
-}
-
-//
-// Get board info
-//
-
 func (b *Board) Piece(index int) Piece {
-	i := index / 16
-	m := index % 16
+	i, m := index/16, index%16
 
 	p := uint64(0b1111 << (m * 4))
 	p2 := b.board[i] & p >> (m * 4)
@@ -180,10 +120,6 @@ func (b *Board) Color(index int) Color {
 	panic("invalid color")
 }
 
-//
-// Move
-//
-
 func (b *Board) ToMove() Color {
 	if b.extra&1 == 0 {
 		return ColorWhite
@@ -191,41 +127,13 @@ func (b *Board) ToMove() Color {
 	return ColorBlack
 }
 
-func (b *Board) toggleToMove() Color {
-	b.extra ^= 1 // Switch color to move
-
-	return b.ToMove()
-}
-
-//
-// Move count
-//
-
 func (b *Board) MoveCount() int {
 	return int((b.extra & 0b11111111_11111111_00000000_00000000) >> 16)
 }
 
-func (b *Board) setMoveCount(c int) {
-	b.extra &= 0b00000000_00000000_11111111_11111111
-	b.extra |= uint32(c) << 16
-}
-
-//
-// Half move count
-//
-
 func (b *Board) HalfMoveCount() int {
 	return int((b.extra & 0b00000000_00000000_00000000_11111110) >> 1)
 }
-
-func (b *Board) setHalfMoveCount(c int) {
-	b.extra &= 0b11111111_11111111_11111111_00000001
-	b.extra |= uint32(c) << 1
-}
-
-//
-// Castling
-//
 
 func (b *Board) CastlingRights(c castlingRight) bool {
 	switch c {
@@ -240,6 +148,15 @@ func (b *Board) CastlingRights(c castlingRight) bool {
 	default:
 		return false
 	}
+}
+
+//
+// Private functions
+//
+
+func (b *Board) setHalfMoveCount(c int) {
+	b.extra &= 0b11111111_11111111_11111111_00000001
+	b.extra |= uint32(c) << 1
 }
 
 func (b *Board) removeCastlingRights(c castlingRight) {
@@ -258,4 +175,81 @@ func (b *Board) removeCastlingRights(c castlingRight) {
 
 func (b *Board) resetCastlingRights() {
 	b.extra |= 0b1111_00000000
+}
+
+func (b *Board) setMoveCount(c int) {
+	b.extra &= 0b00000000_00000000_11111111_11111111
+	b.extra |= uint32(c) << 16
+}
+
+func (b *Board) toggleToMove() Color {
+	b.extra ^= 1 // Switch color to move
+
+	return b.ToMove()
+}
+
+func (b *Board) setPiece(piece Piece, index int) {
+	i, m := index/16, index%16
+
+	b.board[i] = b.board[i] | uint64(piece<<(m*4))
+}
+
+func (b *Board) removePiece(index int) {
+	i, m := index/16, index%16
+
+	b.board[i] &= ^uint64(0b1111 << (m * 4))
+}
+
+func (b *Board) checkValidMove(from, to int) error {
+	f, t := b.Color(from), b.Color(to)
+	if f != b.ToMove() {
+		return errors.New("moving out of turn")
+	}
+	if t != ColorNone && f == t {
+		return errors.New("can't capture own piece")
+	}
+	if b.Piece(from) == PieceNone {
+		return errors.New("can't move a none piece")
+	}
+
+	return nil
+}
+
+func (b *Board) checkCastling(from int) {
+	if from == alg("a1") {
+		b.removeCastlingRights(CastlingWhiteQueen)
+	}
+	if from == alg("h1") {
+		b.removeCastlingRights(CastlingWhiteKing)
+	}
+	if from == alg("e1") {
+		b.removeCastlingRights(CastlingWhiteKing)
+		b.removeCastlingRights(CastlingWhiteQueen)
+	}
+	if from == alg("a8") {
+		b.removeCastlingRights(CastlingBlackQueen)
+	}
+	if from == alg("h8") {
+		b.removeCastlingRights(CastlingBlackKing)
+	}
+	if from == alg("e8") {
+		b.removeCastlingRights(CastlingBlackKing)
+		b.removeCastlingRights(CastlingBlackQueen)
+	}
+}
+
+func (b *Board) increaseMoveCount() {
+	if b.ToMove() == ColorWhite {
+		b.setMoveCount(b.MoveCount() + 1)
+	}
+}
+
+func (b *Board) increaseHalfMoveCount(oldBoard *Board, from, to int) {
+	if oldBoard.Piece(from) == PieceWhitePawn || oldBoard.Piece(from) == PieceBlackPawn {
+		b.setHalfMoveCount(0)
+	} else if oldBoard.Color(to) != ColorNone && oldBoard.Color(from) != oldBoard.Color(to) {
+		b.setHalfMoveCount(0)
+	} else {
+		b.setHalfMoveCount(b.HalfMoveCount() + 1)
+	}
 }
