@@ -1,6 +1,6 @@
 ## CHESS
 
-A chess engine
+A chess engine in Go.
 
 # LINKS
 
