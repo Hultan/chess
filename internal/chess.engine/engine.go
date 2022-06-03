@@ -46,6 +46,7 @@ func NewBoard(setup bool) *Board {
 
 	// Extra
 	b.resetCastlingRights()
+	// TODO : En passant target
 	b.setMoveCount(1)
 
 	return b
@@ -64,12 +65,21 @@ func (b *Board) Copy() *Board {
 		nb.board[i] = b.board[i]
 	}
 
+	// Copy extra information
 	nb.extra = b.extra
 
 	return nb
 }
 
 func (b *Board) MovePiece(from, to int) *Board {
+	f, t := b.Color(from), b.Color(to)
+	if f != b.ToMove() {
+		panic("moving out of turn")
+	}
+	if t != colorNone && f == t {
+		panic("can't capture own piece")
+	}
+
 	if b.Piece(from) == pieceNone {
 		panic("can't move a none piece")
 	}
@@ -129,20 +139,15 @@ func (b *Board) MovePiece(from, to int) *Board {
 //
 
 func (b *Board) setPiece(piece piece, index int) {
-	i := index / 16
-	m := index % 16
+	i, m := index/16, index%16
 
-	p := piece << (m * 4)
-	b.board[i] = b.board[i] | uint64(p)
+	b.board[i] = b.board[i] | uint64(piece<<(m*4))
 }
 
 func (b *Board) removePiece(index int) {
-	i := index / 16
-	m := index % 16
+	i, m := index/16, index%16
 
-	p := uint64(0b1111 << (m * 4))
-	p = ^p
-	b.board[i] &= p
+	b.board[i] &= ^uint64(0b1111 << (m * 4))
 }
 
 //
