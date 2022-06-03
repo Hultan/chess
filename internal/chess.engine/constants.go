@@ -23,8 +23,9 @@ const (
 type color int
 
 const (
-	colorWhite color = 0b0
-	colorBlack color = 0b1
+	colorNone color = iota
+	colorWhite
+	colorBlack
 )
 
 type castlingRight int

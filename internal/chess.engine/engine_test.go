@@ -21,6 +21,7 @@ func TestNewEmptyBoard(t *testing.T) {
 	assert.Equal(t, true, b.CastlingRights(castlingBlackKing))
 	assert.Equal(t, true, b.CastlingRights(castlingBlackQueen))
 	assert.Equal(t, 1, b.MoveCount())
+	assert.Equal(t, 0, b.HalfMoveCount())
 }
 
 func TestNewBoard(t *testing.T) {
@@ -65,9 +66,9 @@ func TestNewBoard(t *testing.T) {
 
 func TestBoard_Copy(t *testing.T) {
 	b := NewBoard(false)
-	b.SetPiece(pieceWhiteBishop, alg("B4"))
-	b.SetPiece(pieceWhiteKing, alg("C5"))
-	b.SetPiece(pieceBlackKing, alg("C8"))
+	b.setPiece(pieceWhiteBishop, alg("B4"))
+	b.setPiece(pieceWhiteKing, alg("C5"))
+	b.setPiece(pieceBlackKing, alg("C8"))
 
 	nb := b.Copy()
 
@@ -81,9 +82,9 @@ func TestBoard_Copy(t *testing.T) {
 
 func TestBoard_MovePiece(t *testing.T) {
 	b := NewBoard(false)
-	b.SetPiece(pieceWhiteBishop, alg("D6"))
-	b.SetPiece(pieceWhiteKing, alg("D5"))
-	b.SetPiece(pieceBlackKing, alg("E7"))
+	b.setPiece(pieceWhiteBishop, alg("D6"))
+	b.setPiece(pieceWhiteKing, alg("D5"))
+	b.setPiece(pieceBlackKing, alg("E7"))
 
 	nb := b.MovePiece(alg("E7"), alg("B2"))
 
@@ -94,24 +95,36 @@ func TestBoard_MovePiece(t *testing.T) {
 	assert.NotEqual(t, nb.board[3], b.board[3])
 }
 
-func TestBoard_SetPiece(t *testing.T) {
+func TestBoard_setPiece(t *testing.T) {
 	b := NewBoard(false)
 
-	b.SetPiece(pieceWhiteKing, alg("B1"))
+	b.setPiece(pieceWhiteKing, alg("B1"))
 	assert.Equal(t, pieceWhiteKing, b.Piece(alg("B1")))
 	assert.Equal(t, colorWhite, b.Color(alg("B1")))
 
-	b.SetPiece(pieceBlackKing, alg("B2"))
+	b.setPiece(pieceBlackKing, alg("B2"))
 	assert.Equal(t, pieceBlackKing, b.Piece(alg("B2")))
 	assert.Equal(t, colorBlack, b.Color(alg("B2")))
 
-	b.SetPiece(pieceBlackRook, alg("D6"))
+	b.setPiece(pieceBlackRook, alg("D6"))
 	assert.Equal(t, pieceBlackRook, b.Piece(alg("D6")))
 	assert.Equal(t, colorBlack, b.Color(alg("D6")))
 
-	b.SetPiece(pieceWhiteBishop, alg("H8"))
+	b.setPiece(pieceWhiteBishop, alg("H8"))
 	assert.Equal(t, pieceWhiteBishop, b.Piece(alg("H8")))
 	assert.Equal(t, colorWhite, b.Color(alg("H8")))
+}
+
+func TestBoard_removePiece(t *testing.T) {
+	b := NewBoard(true)
+
+	b.removePiece(alg("B1"))
+	assert.Equal(t, pieceNone, b.Piece(alg("B1")))
+	assert.Equal(t, colorNone, b.Color(alg("B1")))
+
+	b.removePiece(alg("D6"))
+	assert.Equal(t, pieceNone, b.Piece(alg("D6")))
+	assert.Equal(t, colorNone, b.Color(alg("D6")))
 }
 
 func TestBoard_ToMove(t *testing.T) {
@@ -164,27 +177,27 @@ func TestBoard_WhiteCastlingRights(t *testing.T) {
 	assert.Equal(t, true, b.CastlingRights(castlingBlackKing))
 	assert.Equal(t, true, b.CastlingRights(castlingBlackQueen))
 
-	nb := b.MovePiece(7, 23)
+	b = b.MovePiece(7, 23)
 
-	assert.Equal(t, false, nb.CastlingRights(castlingWhiteKing))
-	assert.Equal(t, true, nb.CastlingRights(castlingWhiteQueen))
-	assert.Equal(t, true, nb.CastlingRights(castlingBlackKing))
-	assert.Equal(t, true, nb.CastlingRights(castlingBlackQueen))
+	assert.Equal(t, false, b.CastlingRights(castlingWhiteKing))
+	assert.Equal(t, true, b.CastlingRights(castlingWhiteQueen))
+	assert.Equal(t, true, b.CastlingRights(castlingBlackKing))
+	assert.Equal(t, true, b.CastlingRights(castlingBlackQueen))
 
-	nb = nb.MovePiece(0, 16)
+	b = b.MovePiece(0, 16)
 
-	assert.Equal(t, false, nb.CastlingRights(castlingWhiteKing))
-	assert.Equal(t, false, nb.CastlingRights(castlingWhiteQueen))
-	assert.Equal(t, true, nb.CastlingRights(castlingBlackKing))
-	assert.Equal(t, true, nb.CastlingRights(castlingBlackQueen))
+	assert.Equal(t, false, b.CastlingRights(castlingWhiteKing))
+	assert.Equal(t, false, b.CastlingRights(castlingWhiteQueen))
+	assert.Equal(t, true, b.CastlingRights(castlingBlackKing))
+	assert.Equal(t, true, b.CastlingRights(castlingBlackQueen))
 
-	nb.resetCastlingRights()
-	nb = nb.MovePiece(4, 20)
+	b.resetCastlingRights()
+	b = b.MovePiece(4, 20)
 
-	assert.Equal(t, false, nb.CastlingRights(castlingWhiteKing))
-	assert.Equal(t, false, nb.CastlingRights(castlingWhiteQueen))
-	assert.Equal(t, true, nb.CastlingRights(castlingBlackKing))
-	assert.Equal(t, true, nb.CastlingRights(castlingBlackQueen))
+	assert.Equal(t, false, b.CastlingRights(castlingWhiteKing))
+	assert.Equal(t, false, b.CastlingRights(castlingWhiteQueen))
+	assert.Equal(t, true, b.CastlingRights(castlingBlackKing))
+	assert.Equal(t, true, b.CastlingRights(castlingBlackQueen))
 }
 
 func TestBoard_BlackCastlingRights(t *testing.T) {
@@ -195,27 +208,27 @@ func TestBoard_BlackCastlingRights(t *testing.T) {
 	assert.Equal(t, true, b.CastlingRights(castlingBlackKing))
 	assert.Equal(t, true, b.CastlingRights(castlingBlackQueen))
 
-	nb := b.MovePiece(63, 55)
+	b = b.MovePiece(63, 55)
 
-	assert.Equal(t, true, nb.CastlingRights(castlingWhiteKing))
-	assert.Equal(t, true, nb.CastlingRights(castlingWhiteQueen))
-	assert.Equal(t, false, nb.CastlingRights(castlingBlackKing))
-	assert.Equal(t, true, nb.CastlingRights(castlingBlackQueen))
+	assert.Equal(t, true, b.CastlingRights(castlingWhiteKing))
+	assert.Equal(t, true, b.CastlingRights(castlingWhiteQueen))
+	assert.Equal(t, false, b.CastlingRights(castlingBlackKing))
+	assert.Equal(t, true, b.CastlingRights(castlingBlackQueen))
 
-	nb = nb.MovePiece(56, 48)
+	b = b.MovePiece(56, 48)
 
-	assert.Equal(t, true, nb.CastlingRights(castlingWhiteKing))
-	assert.Equal(t, true, nb.CastlingRights(castlingWhiteQueen))
-	assert.Equal(t, false, nb.CastlingRights(castlingBlackKing))
-	assert.Equal(t, false, nb.CastlingRights(castlingBlackQueen))
+	assert.Equal(t, true, b.CastlingRights(castlingWhiteKing))
+	assert.Equal(t, true, b.CastlingRights(castlingWhiteQueen))
+	assert.Equal(t, false, b.CastlingRights(castlingBlackKing))
+	assert.Equal(t, false, b.CastlingRights(castlingBlackQueen))
 
-	nb.resetCastlingRights()
-	nb = nb.MovePiece(60, 44)
+	b.resetCastlingRights()
+	b = b.MovePiece(60, 44)
 
-	assert.Equal(t, true, nb.CastlingRights(castlingWhiteKing))
-	assert.Equal(t, true, nb.CastlingRights(castlingWhiteQueen))
-	assert.Equal(t, false, nb.CastlingRights(castlingBlackKing))
-	assert.Equal(t, false, nb.CastlingRights(castlingBlackQueen))
+	assert.Equal(t, true, b.CastlingRights(castlingWhiteKing))
+	assert.Equal(t, true, b.CastlingRights(castlingWhiteQueen))
+	assert.Equal(t, false, b.CastlingRights(castlingBlackKing))
+	assert.Equal(t, false, b.CastlingRights(castlingBlackQueen))
 }
 
 func TestBoard_MoveCount(t *testing.T) {
@@ -229,4 +242,31 @@ func TestBoard_MoveCount(t *testing.T) {
 	assert.Equal(t, 2, b.MoveCount())
 	b = b.MovePiece(62, 54)
 	assert.Equal(t, 3, b.MoveCount())
+}
+
+func TestBoard_HalfMoveCount_PawnReset(t *testing.T) {
+	b := NewBoard(true)
+	assert.Equal(t, 0, b.HalfMoveCount())
+	b = b.MovePiece(1, 10)
+	assert.Equal(t, 1, b.HalfMoveCount())
+	b = b.MovePiece(62, 55)
+	assert.Equal(t, 2, b.HalfMoveCount())
+	b = b.MovePiece(8, 16)
+	assert.Equal(t, 0, b.HalfMoveCount())
+
+}
+
+func TestBoard_HalfMoveCount_CaptureReset(t *testing.T) {
+	b := NewBoard(true)
+	assert.Equal(t, 0, b.HalfMoveCount())
+	b = b.MovePiece(alg("b1"), alg("c3"))
+	assert.Equal(t, 1, b.HalfMoveCount())
+	b = b.MovePiece(alg("b8"), alg("c6"))
+	assert.Equal(t, 2, b.HalfMoveCount())
+	b = b.MovePiece(alg("c3"), alg("d5"))
+	assert.Equal(t, 3, b.HalfMoveCount())
+	b = b.MovePiece(alg("c6"), alg("b4"))
+	assert.Equal(t, 4, b.HalfMoveCount())
+	b = b.MovePiece(alg("d5"), alg("b4"))
+	assert.Equal(t, 0, b.HalfMoveCount())
 }

@@ -12,32 +12,36 @@ type Board struct {
 	extra uint32
 }
 
+//
+// NewBoard
+//
+
 func NewBoard(setup bool) *Board {
 	b := &Board{}
 
 	if setup {
-		b.SetPiece(pieceBlackRook, 56)
-		b.SetPiece(pieceBlackKnight, 57)
-		b.SetPiece(pieceBlackBishop, 58)
-		b.SetPiece(pieceBlackQueen, 59)
-		b.SetPiece(pieceBlackKing, 60)
-		b.SetPiece(pieceBlackBishop, 61)
-		b.SetPiece(pieceBlackKnight, 62)
-		b.SetPiece(pieceBlackRook, 63)
+		b.setPiece(pieceBlackRook, 56)
+		b.setPiece(pieceBlackKnight, 57)
+		b.setPiece(pieceBlackBishop, 58)
+		b.setPiece(pieceBlackQueen, 59)
+		b.setPiece(pieceBlackKing, 60)
+		b.setPiece(pieceBlackBishop, 61)
+		b.setPiece(pieceBlackKnight, 62)
+		b.setPiece(pieceBlackRook, 63)
 
 		for i := 0; i < 8; i++ {
-			b.SetPiece(pieceBlackPawn, 48+i)
-			b.SetPiece(pieceWhitePawn, 8+i)
+			b.setPiece(pieceBlackPawn, 48+i)
+			b.setPiece(pieceWhitePawn, 8+i)
 		}
 
-		b.SetPiece(pieceWhiteRook, 0)
-		b.SetPiece(pieceWhiteKnight, 1)
-		b.SetPiece(pieceWhiteBishop, 2)
-		b.SetPiece(pieceWhiteQueen, 3)
-		b.SetPiece(pieceWhiteKing, 4)
-		b.SetPiece(pieceWhiteBishop, 5)
-		b.SetPiece(pieceWhiteKnight, 6)
-		b.SetPiece(pieceWhiteRook, 7)
+		b.setPiece(pieceWhiteRook, 0)
+		b.setPiece(pieceWhiteKnight, 1)
+		b.setPiece(pieceWhiteBishop, 2)
+		b.setPiece(pieceWhiteQueen, 3)
+		b.setPiece(pieceWhiteKing, 4)
+		b.setPiece(pieceWhiteBishop, 5)
+		b.setPiece(pieceWhiteKnight, 6)
+		b.setPiece(pieceWhiteRook, 7)
 	}
 
 	// Extra
@@ -47,27 +51,36 @@ func NewBoard(setup bool) *Board {
 	return b
 }
 
+//
+// Generate a new board
+//
+
 func (b *Board) Copy() *Board {
 	// Create a new board
 	nb := &Board{}
 
 	// Copy the old board
-	for i, d := range b.board {
-		nb.board[i] = d
+	for i := 0; i < 4; i++ {
+		nb.board[i] = b.board[i]
 	}
+
 	nb.extra = b.extra
 
 	return nb
 }
 
 func (b *Board) MovePiece(from, to int) *Board {
+	if b.Piece(from) == pieceNone {
+		panic("can't move a none piece")
+	}
+
 	// Create a new board
 	nb := b.Copy()
 
 	// Move piece
 	p := nb.Piece(from)
-	nb.SetPiece(p, to)
-	nb.RemovePiece(from)
+	nb.setPiece(p, to)
+	nb.removePiece(from)
 
 	// Castling
 	if from == 0 {
@@ -94,10 +107,28 @@ func (b *Board) MovePiece(from, to int) *Board {
 	// Next player to move
 	nb.toggleToMove()
 
+	// Adjust move count
+	if nb.ToMove() == colorWhite {
+		nb.setMoveCount(nb.MoveCount() + 1)
+	}
+
+	// Adjust half move count
+	if b.Piece(from) == pieceWhitePawn || b.Piece(from) == pieceBlackPawn {
+		nb.setHalfMoveCount(0)
+	} else if b.Color(to) != colorNone && b.Color(from) != b.Color(to) {
+		nb.setHalfMoveCount(0)
+	} else {
+		nb.setHalfMoveCount(nb.HalfMoveCount() + 1)
+	}
+
 	return nb
 }
 
-func (b *Board) SetPiece(piece piece, index int) {
+//
+// Manipulate board
+//
+
+func (b *Board) setPiece(piece piece, index int) {
 	i := index / 16
 	m := index % 16
 
@@ -105,13 +136,18 @@ func (b *Board) SetPiece(piece piece, index int) {
 	b.board[i] = b.board[i] | uint64(p)
 }
 
-func (b *Board) RemovePiece(index int) {
+func (b *Board) removePiece(index int) {
 	i := index / 16
 	m := index % 16
 
-	p := uint64(0b000 << m)
-	b.board[i] = b.board[i] & p
+	p := uint64(0b1111 << (m * 4))
+	p = ^p
+	b.board[i] &= p
 }
+
+//
+// Get board info
+//
 
 func (b *Board) Piece(index int) piece {
 	i := index / 16
@@ -124,29 +160,41 @@ func (b *Board) Piece(index int) piece {
 }
 
 func (b *Board) Color(index int) color {
-	i := index / 16
-	m := index % 16
+	p := b.Piece(index)
 
-	p := uint64(0b1000 << (m * 4))
-	c := b.board[i] & p >> (m*4 + 3)
+	if p == pieceNone {
+		return colorNone
+	}
+	if p >= pieceWhitePawn && p <= pieceWhiteKing {
+		return colorWhite
+	}
+	if p >= pieceBlackPawn && p <= pieceBlackKing {
+		return colorBlack
+	}
 
-	return color(c)
+	panic("invalid color")
 }
 
+//
+// Move
+//
+
 func (b *Board) ToMove() color {
-	return color(b.extra & 1)
+	if b.extra&1 == 0 {
+		return colorWhite
+	}
+	return colorBlack
 }
 
 func (b *Board) toggleToMove() color {
 	b.extra ^= 1 // Switch color to move
 
-	if b.ToMove() == colorWhite {
-		b.setMoveCount(b.MoveCount() + 1)
-	}
-	// b.setHalfMoveCount(b.Half MoveCount() + 1)
-
 	return b.ToMove()
 }
+
+//
+// Move count
+//
 
 func (b *Board) MoveCount() int {
 	return int((b.extra & 0b11111111_11111111_00000000_00000000) >> 16)
@@ -156,6 +204,23 @@ func (b *Board) setMoveCount(c int) {
 	b.extra &= 0b00000000_00000000_11111111_11111111
 	b.extra |= uint32(c) << 16
 }
+
+//
+// Half move count
+//
+
+func (b *Board) HalfMoveCount() int {
+	return int((b.extra & 0b00000000_00000000_00000000_11111110) >> 1)
+}
+
+func (b *Board) setHalfMoveCount(c int) {
+	b.extra &= 0b11111111_11111111_11111111_00000001
+	b.extra |= uint32(c) << 1
+}
+
+//
+// Castling
+//
 
 func (b *Board) CastlingRights(c castlingRight) bool {
 	switch c {
