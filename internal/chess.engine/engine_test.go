@@ -246,6 +246,20 @@ func TestBoard_BlackCastlingRights(t *testing.T) {
 	assert.Equal(t, false, b.CastlingRights(CastlingBlackQueen))
 }
 
+func TestBoard_setMoveCount(t *testing.T) {
+	b := NewBoard(true)
+	b.setMoveCount(0)
+	assert.Equal(t, 0, b.MoveCount())
+	b.setMoveCount(1)
+	assert.Equal(t, 1, b.MoveCount())
+	b.setMoveCount(12)
+	assert.Equal(t, 12, b.MoveCount())
+	b.setMoveCount(53)
+	assert.Equal(t, 53, b.MoveCount())
+	b.setMoveCount(114)
+	assert.Equal(t, 114, b.MoveCount())
+}
+
 func TestBoard_MoveCount(t *testing.T) {
 	b := NewBoard(true)
 	assert.Equal(t, 1, b.MoveCount())
@@ -284,4 +298,20 @@ func TestBoard_HalfMoveCount_CaptureReset(t *testing.T) {
 	assert.Equal(t, 4, b.HalfMoveCount())
 	b = b.MovePiece(alg("d5"), alg("b4"))
 	assert.Equal(t, 0, b.HalfMoveCount())
+}
+
+func TestBoard_EnPassant(t *testing.T) {
+	b := NewBoard(true)
+	b = b.MovePiece(alg("b2"), alg("b4"))
+	assert.Equal(t, 0, b.getEnPassantTarget())
+	b = b.MovePiece(alg("b7"), alg("b6"))
+	assert.Equal(t, 0, b.getEnPassantTarget())
+
+	b = NewBoard(true)
+	b = b.MovePiece(alg("b2"), alg("b3"))
+	assert.Equal(t, 0, b.getEnPassantTarget())
+	b = b.MovePiece(alg("b7"), alg("b5"))
+	assert.Equal(t, 9, b.getEnPassantTarget())
+	b = b.MovePiece(alg("c2"), alg("c3"))
+	assert.Equal(t, 0, b.getEnPassantTarget())
 }

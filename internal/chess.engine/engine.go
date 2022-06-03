@@ -80,8 +80,11 @@ func (b *Board) MovePiece(from, to int) *Board {
 	nb.setPiece(p, to)
 	nb.removePiece(from)
 
+	// En passant
+	nb.checkEnPassant(b, from, to)
+
 	// Castling
-	nb.checkCastling(from)
+	nb.checkCastlingRights(from)
 
 	// Next player to move
 	nb.toggleToMove()
@@ -128,7 +131,7 @@ func (b *Board) ToMove() Color {
 }
 
 func (b *Board) MoveCount() int {
-	return int((b.extra & 0b11111111_11111111_00000000_00000000) >> 16)
+	return int((b.extra & 0b11111111_11111110_00000000_00000000) >> 17)
 }
 
 func (b *Board) HalfMoveCount() int {
@@ -154,6 +157,11 @@ func (b *Board) CastlingRights(c castlingRight) bool {
 // Private functions
 //
 
+func (b *Board) setMoveCount(c int) {
+	b.extra &= 0b00000000_00000001_11111111_11111111
+	b.extra |= uint32(c) << 17
+}
+
 func (b *Board) setHalfMoveCount(c int) {
 	b.extra &= 0b11111111_11111111_11111111_00000001
 	b.extra |= uint32(c) << 1
@@ -175,11 +183,6 @@ func (b *Board) removeCastlingRights(c castlingRight) {
 
 func (b *Board) resetCastlingRights() {
 	b.extra |= 0b1111_00000000
-}
-
-func (b *Board) setMoveCount(c int) {
-	b.extra &= 0b00000000_00000000_11111111_11111111
-	b.extra |= uint32(c) << 16
 }
 
 func (b *Board) toggleToMove() Color {
@@ -215,7 +218,7 @@ func (b *Board) checkValidMove(from, to int) error {
 	return nil
 }
 
-func (b *Board) checkCastling(from int) {
+func (b *Board) checkCastlingRights(from int) {
 	if from == alg("a1") {
 		b.removeCastlingRights(CastlingWhiteQueen)
 	}
@@ -252,4 +255,29 @@ func (b *Board) increaseHalfMoveCount(oldBoard *Board, from, to int) {
 	} else {
 		b.setHalfMoveCount(b.HalfMoveCount() + 1)
 	}
+}
+
+func (b *Board) checkEnPassant(oldBoard *Board, from, to int) {
+	if oldBoard.Piece(from) == PieceWhitePawn && from >= 8 && from <= 15 && to-from == 16 {
+		b.setEnPassantTarget(from - 8)
+		return
+	}
+	if oldBoard.Piece(from) == PieceBlackPawn && from >= 48 && from <= 55 && from-to == 16 {
+		b.setEnPassantTarget(from - 48)
+		return
+	}
+	b.clearEnPassantTarget()
+}
+
+func (b *Board) setEnPassantTarget(i int) {
+	b.extra &= 0b11111111_11111110_00001111_11111111
+	b.extra |= uint32(i+1) << 12
+}
+
+func (b *Board) clearEnPassantTarget() {
+	b.extra &= 0b11111111_11111110_00001111_11111111
+}
+
+func (b *Board) getEnPassantTarget() int {
+	return int((b.extra & 0b00000000_00000001_11110000_00000000) >> 12)
 }
