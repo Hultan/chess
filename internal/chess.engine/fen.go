@@ -57,62 +57,38 @@ func FromFEN(fen string) (*Board, error) {
 
 func (b *Board) toFenBoard() string {
 	result := ""
-	spaces := 0
 	for y := 8; y >= 1; y-- {
-		for x := 1; x <= 8; x++ {
-			l := b.getLetterFromPiece(b.Piece(xy(x, y)))
+		result += b.toFenBoardRow(y) + "/"
+	}
 
-			if l == " " {
-				spaces++
-			} else {
-				if spaces > 0 {
-					result += strconv.Itoa(spaces)
-					spaces = 0
-				}
-				result += l
+	return result[:len(result)-1]
+}
+
+func (b *Board) toFenBoardRow(y int) string {
+	result := ""
+	spaces := 0
+	for x := 1; x <= 8; x++ {
+		l := b.getLetterFromPiece(b.Piece(xy(x, y)))
+
+		if l == " " {
+			// Empty square
+			spaces++
+		} else {
+			// Piece square
+			if spaces > 0 {
+				result += strconv.Itoa(spaces)
+				spaces = 0
 			}
+			result += l
 		}
-		if spaces > 0 {
-			result += strconv.Itoa(spaces)
-			spaces = 0
-		}
-		if y != 1 {
-			result += "/"
-		}
+	}
+	if spaces > 0 {
+		result += strconv.Itoa(spaces)
+		spaces = 0
 	}
 
 	return result
 }
-
-//
-// func (b *Board) toFenBoardRow(r row) string {
-// 	result := ""
-// 	spaces := 0
-// 	for y := 8; y >= 1; y-- {
-// 		for x := 1; x <= 8; x++ {
-// 			l := b.getLetterFromPiece(b.Piece(xy(x, y)))
-//
-// 			if l == " " {
-// 				spaces++
-// 			} else {
-// 				if spaces > 0 {
-// 					result += strconv.Itoa(spaces)
-// 					spaces = 0
-// 				}
-// 				result += l
-// 			}
-// 		}
-// 		if spaces > 0 {
-// 			result += strconv.Itoa(spaces)
-// 			spaces = 0
-// 		}
-// 		if y != 1 {
-// 			result += "/"
-// 		}
-// 	}
-//
-// 	return result
-// }
 
 func (b *Board) toFenToMove() string {
 	if b.ToMove() == ColorWhite {
