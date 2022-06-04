@@ -1,7 +1,6 @@
 package chess_engine
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,6 +23,4 @@ func TestBoard_print(t *testing.T) {
 
 	b = b.MovePiece(alg("d2"), alg("d4"))
 	assert.Equal(t, "r bqkbnr\npppppppp\n  n     \n        \n   P    \n  N     \nPPP PPPP\nR BQKBNR\nBlack to move\nCastling : KQkq\nEn passant : c3\nHalf move count : 0\nMove count : 2\n", b.print())
-
-	fmt.Println(b.print())
 }
