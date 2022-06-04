@@ -20,6 +20,7 @@ func TestNewEmptyBoard(t *testing.T) {
 	assert.Equal(t, true, b.CastlingRights(CastlingWhiteQueen))
 	assert.Equal(t, true, b.CastlingRights(CastlingBlackKing))
 	assert.Equal(t, true, b.CastlingRights(CastlingBlackQueen))
+	assert.Equal(t, 0, b.getEnPassantTarget())
 	assert.Equal(t, 1, b.MoveCount())
 	assert.Equal(t, 0, b.HalfMoveCount())
 }
@@ -61,24 +62,55 @@ func TestNewBoard(t *testing.T) {
 	assert.Equal(t, true, b.CastlingRights(CastlingWhiteQueen))
 	assert.Equal(t, true, b.CastlingRights(CastlingBlackKing))
 	assert.Equal(t, true, b.CastlingRights(CastlingBlackQueen))
+	assert.Equal(t, 0, b.getEnPassantTarget())
 	assert.Equal(t, 1, b.MoveCount())
 	assert.Equal(t, 0, b.HalfMoveCount())
 }
 
 func TestBoard_Copy(t *testing.T) {
 	b := NewBoard(false)
+
+	// Manipulate the board
 	b.setPiece(PieceWhiteBishop, alg("B4"))
 	b.setPiece(PieceWhiteKing, alg("C5"))
 	b.setPiece(PieceBlackKing, alg("C8"))
 
+	// Manipulate extra data
+	b.removeCastlingRights(CastlingBlackQueen)
+	b.increaseMoveCount()
+	b.setEnPassantTarget(4)
+
 	nb := b.Copy()
 
 	assert.NotNil(t, nb)
+	assert.True(t, b.Equals(nb))
 	assert.Equal(t, nb.board[0], b.board[0])
 	assert.Equal(t, nb.board[1], b.board[1])
 	assert.Equal(t, nb.board[2], b.board[2])
 	assert.Equal(t, nb.board[3], b.board[3])
 	assert.Equal(t, nb.extra, b.extra)
+}
+
+func TestBoard_Equals(t *testing.T) {
+	b := NewBoard(false)
+
+	// Manipulate the board
+	b.setPiece(PieceWhiteBishop, alg("B4"))
+	b.setPiece(PieceWhiteKing, alg("C5"))
+	b.setPiece(PieceBlackKing, alg("C8"))
+
+	// Manipulate extra data
+	b.removeCastlingRights(CastlingBlackQueen)
+	b.increaseMoveCount()
+	b.setEnPassantTarget(4)
+
+	nb := b.Copy()
+
+	assert.NotNil(t, nb)
+	assert.True(t, b.Equals(nb))
+
+	b.clearEnPassantTarget()
+	assert.False(t, b.Equals(nb))
 }
 
 func TestBoard_MovePiece(t *testing.T) {

@@ -49,10 +49,23 @@ func NewBoard(setup bool) *Board {
 
 	// Extra
 	b.resetCastlingRights()
-	// TODO : En passant target
+	b.clearEnPassantTarget()
 	b.setMoveCount(1)
 
 	return b
+}
+
+func (b *Board) Equals(o *Board) bool {
+	for i := 0; i < 4; i++ {
+		if b.board[i] != o.board[i] {
+			return false
+		}
+	}
+	if b.extra != o.extra {
+		return false
+	}
+
+	return true
 }
 
 func (b *Board) Copy() *Board {
@@ -71,7 +84,7 @@ func (b *Board) Copy() *Board {
 }
 
 func (b *Board) MovePiece(from, to int) *Board {
-	if e := b.checkValidMove(from, to); e != nil {
+	if e := b.checkValidMoveBasic(from, to); e != nil {
 		panic(e)
 	}
 
@@ -160,15 +173,88 @@ func (b *Board) CastlingRights(c castlingRight) bool {
 // Private functions
 //
 
+func (b *Board) setPiece(piece Piece, index int) {
+	i, m := index/16, index%16
+
+	b.board[i] = b.board[i] | uint64(piece<<(m*4))
+}
+
+func (b *Board) removePiece(index int) {
+	i, m := index/16, index%16
+
+	b.board[i] &= ^uint64(0b1111 << (m * 4))
+}
+
+func (b *Board) checkValidMoveBasic(from, to int) error {
+	f, t := b.Color(from), b.Color(to)
+	if f != b.ToMove() {
+		return errors.New("moving out of turn")
+	}
+	if t != ColorNone && f == t {
+		return errors.New("can't capture own piece")
+	}
+	if b.Piece(from) == PieceNone {
+		return errors.New("can't move a none piece")
+	}
+
+	return nil
+}
+
+//
+// To move
+//
+
+func (b *Board) setToMove(whiteToMove bool) {
+	if whiteToMove {
+		b.extra &= 0b11111111_11111111_11111111_11111110
+	} else {
+		b.extra |= 1
+	}
+}
+
+func (b *Board) toggleToMove() Color {
+	b.extra ^= 1 // Switch color to move
+
+	return b.ToMove()
+}
+
+//
+// Move count
+//
+
 func (b *Board) setMoveCount(c int) {
 	b.extra &= 0b00000000_00000001_11111111_11111111
 	b.extra |= uint32(c) << 17
 }
 
+func (b *Board) increaseMoveCount() {
+	if b.ToMove() == ColorWhite {
+		b.setMoveCount(b.MoveCount() + 1)
+	}
+}
+
+//
+// Half move count
+//
+
 func (b *Board) setHalfMoveCount(c int) {
 	b.extra &= 0b11111111_11111111_11111111_00000001
 	b.extra |= uint32(c) << 1
 }
+
+func (b *Board) increaseHalfMoveCount(oldBoard *Board, from, to int) {
+	if oldBoard.Piece(from) == PieceWhitePawn || oldBoard.Piece(from) == PieceBlackPawn {
+		b.setHalfMoveCount(0)
+	} else if oldBoard.Color(to) != ColorNone && oldBoard.Color(from) != oldBoard.Color(to) {
+		b.setHalfMoveCount(0)
+	} else {
+		b.setHalfMoveCount(b.HalfMoveCount() + 1)
+	}
+}
+
+//
+// Castling
+//
 
 func (b *Board) setCastlingRights(c castlingRight) {
 	switch c {
@@ -202,47 +288,6 @@ func (b *Board) resetCastlingRights() {
 	b.extra |= 0b1111_00000000
 }
 
-func (b *Board) setToMove(whiteToMove bool) {
-	if whiteToMove {
-		b.extra &= 0b11111111_11111111_11111111_11111110
-	} else {
-		b.extra |= 1
-	}
-}
-
-func (b *Board) toggleToMove() Color {
-	b.extra ^= 1 // Switch color to move
-
-	return b.ToMove()
-}
-
-func (b *Board) setPiece(piece Piece, index int) {
-	i, m := index/16, index%16
-
-	b.board[i] = b.board[i] | uint64(piece<<(m*4))
-}
-
-func (b *Board) removePiece(index int) {
-	i, m := index/16, index%16
-
-	b.board[i] &= ^uint64(0b1111 << (m * 4))
-}
-
-func (b *Board) checkValidMove(from, to int) error {
-	f, t := b.Color(from), b.Color(to)
-	if f != b.ToMove() {
-		return errors.New("moving out of turn")
-	}
-	if t != ColorNone && f == t {
-		return errors.New("can't capture own piece")
-	}
-	if b.Piece(from) == PieceNone {
-		return errors.New("can't move a none piece")
-	}
-
-	return nil
-}
-
 func (b *Board) checkCastlingRights(from int) {
 	if from == alg("a1") {
 		b.removeCastlingRights(CastlingWhiteQueen)
@@ -266,21 +311,9 @@ func (b *Board) checkCastlingRights(from int) {
 	}
 }
 
-func (b *Board) increaseMoveCount() {
-	if b.ToMove() == ColorWhite {
-		b.setMoveCount(b.MoveCount() + 1)
-	}
-}
-
-func (b *Board) increaseHalfMoveCount(oldBoard *Board, from, to int) {
-	if oldBoard.Piece(from) == PieceWhitePawn || oldBoard.Piece(from) == PieceBlackPawn {
-		b.setHalfMoveCount(0)
-	} else if oldBoard.Color(to) != ColorNone && oldBoard.Color(from) != oldBoard.Color(to) {
-		b.setHalfMoveCount(0)
-	} else {
-		b.setHalfMoveCount(b.HalfMoveCount() + 1)
-	}
-}
+//
+// En passant
+//
 
 func (b *Board) checkEnPassant(oldBoard *Board, from, to int) {
 	if oldBoard.Piece(from) == PieceWhitePawn && from >= 8 && from <= 15 && to-from == 16 {
