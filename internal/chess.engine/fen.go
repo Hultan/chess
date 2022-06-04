@@ -10,53 +10,52 @@ var InvalidFEN = errors.New("invalid FEN")
 
 // ToFEN generates a FEN string : https://www.chess.com/terms/fen-chess
 func (b *Board) ToFEN() string {
-	s := b.fenSection1() + " "
-	s += b.fenSection2() + " "
-	s += b.fenSection3() + " "
-	s += b.fenSection4() + " "
-	s += b.fenSection5() + " "
-	s += b.fenSection6()
+	m := make(map[int]func() string, 6)
+	m[0] = b.toFenBoard
+	m[1] = b.toFenToMove
+	m[2] = b.toFenCastling
+	m[3] = b.toFenEnPassant
+	m[4] = b.toFenHalfMoveCount
+	m[5] = b.toFenMoveCount
 
-	return s
+	// Call each step function
+	s := ""
+	for i := 0; i < 6; i++ {
+		s += m[i]() + " "
+	}
+
+	return s[:len(s)-1]
 }
 
 // FromFEN parses a fen string and sets up the board accordingly : https://www.chess.com/terms/fen-chess
-func (b *Board) FromFEN(fen string) error {
+func FromFEN(fen string) (*Board, error) {
+	nb := NewBoard(false)
 	fens := strings.Fields(fen)
 
-	err := b.parseFen1(fens[0])
-	if err != nil {
-		return err
-	}
-	err = b.parseFen2(fens[1])
-	if err != nil {
-		return err
-	}
-	err = b.parseFen3(fens[2])
-	if err != nil {
-		return err
-	}
-	err = b.parseFen4(fens[3])
-	if err != nil {
-		return err
-	}
-	err = b.parseFen5(fens[4])
-	if err != nil {
-		return err
-	}
-	err = b.parseFen6(fens[5])
-	if err != nil {
-		return err
+	m := make(map[int]func(string) error, 6)
+	m[0] = nb.fromFenBoard
+	m[1] = nb.fromFenToMove
+	m[2] = nb.fromFenCastling
+	m[3] = nb.fromFenEnPassant
+	m[4] = nb.fromFenHalfMoveCount
+	m[5] = nb.fromFenMoveCount
+
+	// Call each step function
+	for i := 0; i < 6; i++ {
+		err := m[i](fens[i])
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return nil
+	return nb, nil
 }
 
 //
 // Private methods
 //
 
-func (b *Board) fenSection1() string {
+func (b *Board) toFenBoard() string {
 	result := ""
 	spaces := 0
 	for y := 8; y >= 1; y-- {
@@ -85,14 +84,44 @@ func (b *Board) fenSection1() string {
 	return result
 }
 
-func (b *Board) fenSection2() string {
+//
+// func (b *Board) toFenBoardRow(r row) string {
+// 	result := ""
+// 	spaces := 0
+// 	for y := 8; y >= 1; y-- {
+// 		for x := 1; x <= 8; x++ {
+// 			l := b.getLetterFromPiece(b.Piece(xy(x, y)))
+//
+// 			if l == " " {
+// 				spaces++
+// 			} else {
+// 				if spaces > 0 {
+// 					result += strconv.Itoa(spaces)
+// 					spaces = 0
+// 				}
+// 				result += l
+// 			}
+// 		}
+// 		if spaces > 0 {
+// 			result += strconv.Itoa(spaces)
+// 			spaces = 0
+// 		}
+// 		if y != 1 {
+// 			result += "/"
+// 		}
+// 	}
+//
+// 	return result
+// }
+
+func (b *Board) toFenToMove() string {
 	if b.ToMove() == ColorWhite {
 		return "w"
 	}
 	return "b"
 }
 
-func (b *Board) fenSection3() string {
+func (b *Board) toFenCastling() string {
 	result := ""
 	if b.CastlingRights(CastlingWhiteKing) {
 		result += "K"
@@ -112,7 +141,7 @@ func (b *Board) fenSection3() string {
 	return result
 }
 
-func (b *Board) fenSection4() string {
+func (b *Board) toFenEnPassant() string {
 	t := b.getEnPassantTarget()
 	if t == 0 {
 		return "-"
@@ -127,15 +156,15 @@ func (b *Board) fenSection4() string {
 	return result
 }
 
-func (b *Board) fenSection5() string {
+func (b *Board) toFenHalfMoveCount() string {
 	return strconv.Itoa(b.HalfMoveCount())
 }
 
-func (b *Board) fenSection6() string {
+func (b *Board) toFenMoveCount() string {
 	return strconv.Itoa(b.MoveCount())
 }
 
-func (b *Board) parseFen1(s string) error {
+func (b *Board) fromFenBoard(s string) error {
 	rows := strings.Split(s, "/")
 	if len(rows) != 8 {
 		return InvalidFEN
@@ -190,7 +219,7 @@ func (b *Board) parseFen1Row(y int, row string) error {
 	return nil
 }
 
-func (b *Board) parseFen2(s string) error {
+func (b *Board) fromFenToMove(s string) error {
 	if s == "w" {
 		b.setToMove(true)
 		return nil
@@ -201,7 +230,7 @@ func (b *Board) parseFen2(s string) error {
 	return InvalidFEN
 }
 
-func (b *Board) parseFen3(s string) error {
+func (b *Board) fromFenCastling(s string) error {
 	if len(s) > 4 {
 		return InvalidFEN
 	}
@@ -229,7 +258,7 @@ func (b *Board) parseFen3(s string) error {
 	return nil
 }
 
-func (b *Board) parseFen4(s string) error {
+func (b *Board) fromFenEnPassant(s string) error {
 	if s == "-" {
 		b.clearEnPassantTarget()
 		return nil
@@ -244,7 +273,7 @@ func (b *Board) parseFen4(s string) error {
 	return nil
 }
 
-func (b *Board) parseFen5(s string) error {
+func (b *Board) fromFenHalfMoveCount(s string) error {
 	count, err := strconv.Atoi(s)
 	if err != nil {
 		return InvalidFEN
@@ -253,7 +282,7 @@ func (b *Board) parseFen5(s string) error {
 	return nil
 }
 
-func (b *Board) parseFen6(s string) error {
+func (b *Board) fromFenMoveCount(s string) error {
 	count, err := strconv.Atoi(s)
 	if err != nil {
 		return InvalidFEN
