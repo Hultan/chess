@@ -9,7 +9,7 @@ func (b *Board) print() string {
 	board := ""
 	for i := 0; i < 64; i++ {
 		p := b.Piece(i)
-		l := b.getLetterFromPiece(p)
+		l := getLetterFromPiece(p)
 		rank += l
 		if (i+1)%8 == 0 {
 			board = rank + "\n" + board
@@ -41,9 +41,9 @@ func (b *Board) print() string {
 	}
 	if e := b.getEnPassantTarget(); e != 0 {
 		if e <= 8 {
-			board += fmt.Sprintf("En passant : %s3\n", b.getFileLetter(e))
+			board += fmt.Sprintf("En passant : %s3\n", getFileLetter(e))
 		} else {
-			board += fmt.Sprintf("En passant : %s6\n", b.getFileLetter(e-8))
+			board += fmt.Sprintf("En passant : %s6\n", getFileLetter(e-8))
 		}
 	}
 	board += fmt.Sprintf("Half move count : %d\n", b.HalfMoveCount())

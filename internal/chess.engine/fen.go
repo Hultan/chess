@@ -68,7 +68,7 @@ func (b *Board) toFenBoardRow(y int) string {
 	result := ""
 	spaces := 0
 	for x := 1; x <= 8; x++ {
-		l := b.getLetterFromPiece(b.Piece(xy(x, y)))
+		l := getLetterFromPiece(b.Piece(xy(x, y)))
 
 		if l == " " {
 			// Empty square
@@ -125,9 +125,9 @@ func (b *Board) toFenEnPassant() string {
 
 	result := ""
 	if t >= 1 && t <= 8 {
-		result = b.getFileLetter(t) + "3"
+		result = getFileLetter(t) + "3"
 	} else {
-		result = b.getFileLetter(t) + "6"
+		result = getFileLetter(t) + "6"
 	}
 	return result
 }
@@ -188,7 +188,7 @@ func (b *Board) parseFen1Row(y int, row string) error {
 			continue
 		}
 
-		typ = b.getPieceFromLetter(string(letter))
+		typ = getPieceFromLetter(string(letter))
 		b.setPiece(typ, xy(col, y))
 		pos++
 	}
