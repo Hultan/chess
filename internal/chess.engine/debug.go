@@ -9,7 +9,7 @@ func (b *Board) print() string {
 	board := ""
 	for i := 0; i < 64; i++ {
 		p := b.Piece(i)
-		l := b.getPieceLetter(p)
+		l := b.getLetterFromPiece(p)
 		rank += l
 		if (i+1)%8 == 0 {
 			board = rank + "\n" + board
@@ -36,8 +36,9 @@ func (b *Board) print() string {
 	if b.CastlingRights(CastlingBlackQueen) {
 		castling += "q"
 	}
-	board += fmt.Sprintf("Castling : %s\n", castling)
-
+	if castling != "" {
+		board += fmt.Sprintf("Castling : %s\n", castling)
+	}
 	if e := b.getEnPassantTarget(); e != 0 {
 		if e <= 8 {
 			board += fmt.Sprintf("En passant : %s3\n", b.getFileLetter(e))
@@ -49,59 +50,4 @@ func (b *Board) print() string {
 	board += fmt.Sprintf("Move count : %d\n", b.MoveCount())
 
 	return board
-}
-
-func (b *Board) getFileLetter(e int) string {
-	switch e {
-	case 1:
-		return "A"
-	case 2:
-		return "B"
-	case 3:
-		return "C"
-	case 4:
-		return "D"
-	case 5:
-		return "E"
-	case 6:
-		return "F"
-	case 7:
-		return "G"
-	case 8:
-		return "H"
-	}
-	return ""
-}
-
-func (b *Board) getPieceLetter(p Piece) string {
-	switch p {
-	case PieceNone:
-		return " "
-	case PieceWhitePawn:
-		return "P"
-	case PieceWhiteBishop:
-		return "B"
-	case PieceWhiteKnight:
-		return "N"
-	case PieceWhiteRook:
-		return "R"
-	case PieceWhiteQueen:
-		return "Q"
-	case PieceWhiteKing:
-		return "K"
-	case PieceBlackPawn:
-		return "p"
-	case PieceBlackBishop:
-		return "b"
-	case PieceBlackKnight:
-		return "n"
-	case PieceBlackRook:
-		return "r"
-	case PieceBlackQueen:
-		return "q"
-	case PieceBlackKing:
-		return "k"
-	default:
-		panic("invalid piece in getPieceLetter()")
-	}
 }

@@ -282,7 +282,7 @@ func TestBoard_HalfMoveCount_CaptureReset(t *testing.T) {
 func TestBoard_EnPassant(t *testing.T) {
 	b := NewBoard(true)
 	b = b.MovePiece(alg("b2"), alg("b4"))
-	assert.Equal(t, 0, b.getEnPassantTarget())
+	assert.Equal(t, 1, b.getEnPassantTarget())
 	b = b.MovePiece(alg("b7"), alg("b6"))
 	assert.Equal(t, 0, b.getEnPassantTarget())
 

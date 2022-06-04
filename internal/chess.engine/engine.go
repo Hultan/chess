@@ -9,8 +9,11 @@ import (
 //  - extra - bit 0 - color to move
 //          - bit 1-7 - half move count, since last capture or pawn advance
 //          - bit 8-11 - castling rights : WK,WQ,BK,BQ
-//          - bit 12-15 - en passant target, can only occur on 16 squares
-//          - bit 16-31 - move count
+//          - bit 12-16 - en passant target, can only occur on 16 squares (0-16)
+//                  0    no en passant target
+//                  1-8  rank 3
+//                  9-16 rank 5
+//          - bit 17-31 - move count
 type Board struct {
 	board [4]uint64
 	extra uint32
@@ -167,6 +170,20 @@ func (b *Board) setHalfMoveCount(c int) {
 	b.extra |= uint32(c) << 1
 }
 
+func (b *Board) setCastlingRights(c castlingRight) {
+	switch c {
+	case CastlingWhiteKing:
+		b.extra |= 0b00000000_00000000_00000001_00000000
+	case CastlingWhiteQueen:
+		b.extra |= 0b00000000_00000000_00000010_00000000
+	case CastlingBlackKing:
+		b.extra |= 0b00000000_00000000_00000100_00000000
+	case CastlingBlackQueen:
+		b.extra |= 0b00000000_00000000_0000100000000000
+	default:
+	}
+}
+
 func (b *Board) removeCastlingRights(c castlingRight) {
 	switch c {
 	case CastlingWhiteKing:
@@ -183,6 +200,14 @@ func (b *Board) removeCastlingRights(c castlingRight) {
 
 func (b *Board) resetCastlingRights() {
 	b.extra |= 0b1111_00000000
+}
+
+func (b *Board) setToMove(whiteToMove bool) {
+	if whiteToMove {
+		b.extra &= 0b11111111_11111111_11111111_11111110
+	} else {
+		b.extra |= 1
+	}
 }
 
 func (b *Board) toggleToMove() Color {
@@ -263,7 +288,7 @@ func (b *Board) checkEnPassant(oldBoard *Board, from, to int) {
 		return
 	}
 	if oldBoard.Piece(from) == PieceBlackPawn && from >= 48 && from <= 55 && from-to == 16 {
-		b.setEnPassantTarget(from - 48)
+		b.setEnPassantTarget(from - 48 + 8)
 		return
 	}
 	b.clearEnPassantTarget()
@@ -271,7 +296,7 @@ func (b *Board) checkEnPassant(oldBoard *Board, from, to int) {
 
 func (b *Board) setEnPassantTarget(i int) {
 	b.extra &= 0b11111111_11111110_00001111_11111111
-	b.extra |= uint32(i+1) << 12
+	b.extra |= uint32(i) << 12
 }
 
 func (b *Board) clearEnPassantTarget() {
