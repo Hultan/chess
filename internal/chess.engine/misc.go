@@ -26,6 +26,11 @@ func xy(x, y int) int {
 
 	return (x - 1) + (y-1)*8
 }
+
+func toXY(i int) (int, int) {
+	return i%8 + 1, i/8 + 1
+}
+
 func getFileLetter(f int) string {
 	switch f {
 	case 1:
@@ -46,6 +51,39 @@ func getFileLetter(f int) string {
 		return "h"
 	}
 	return ""
+}
+
+func getPieceName(p Piece) string {
+	switch p {
+	case PieceNone:
+		return " "
+	case PieceWhitePawn:
+		return "White Pawn"
+	case PieceWhiteBishop:
+		return "White Bishop"
+	case PieceWhiteKnight:
+		return "White Knight"
+	case PieceWhiteRook:
+		return "White Rook"
+	case PieceWhiteQueen:
+		return "White Queen"
+	case PieceWhiteKing:
+		return "White King"
+	case PieceBlackPawn:
+		return "Black Pawn"
+	case PieceBlackBishop:
+		return "Black Bishop"
+	case PieceBlackKnight:
+		return "Black Knight"
+	case PieceBlackRook:
+		return "Black Rook"
+	case PieceBlackQueen:
+		return "Black Queen"
+	case PieceBlackKing:
+		return "Black King"
+	default:
+		panic("invalid piece in getLetterFromPiece()")
+	}
 }
 
 func getLetterFromPiece(p Piece) string {

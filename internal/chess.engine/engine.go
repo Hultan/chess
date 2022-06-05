@@ -125,7 +125,12 @@ func (b *Board) Piece(index int) Piece {
 
 func (b *Board) Color(index int) Color {
 	p := b.Piece(index)
+	return b.ColorFromPiece(p)
 
+	panic("invalid color")
+}
+
+func (b *Board) ColorFromPiece(p Piece) Color {
 	if p == PieceNone {
 		return ColorNone
 	}
