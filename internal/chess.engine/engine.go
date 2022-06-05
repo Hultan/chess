@@ -342,3 +342,32 @@ func (b *Board) clearEnPassantTarget() {
 func (b *Board) getEnPassantTarget() int {
 	return int((b.extra & 0b00000000_00000001_11110000_00000000) >> 12)
 }
+
+// isEndGame returns true when
+//    1. Both sides have no queens or
+//    2. Every side which has a queen has additionally no other pieces or one minor piece maximum.
+func (b *Board) isEndGame() bool {
+	var wQueen, bQueen bool
+	var wCount, bCount int
+	for i := 0; i < 64; i++ {
+		piece := b.Piece(Pos(i))
+		if piece == PieceWhiteQueen {
+			wQueen = true
+		}
+		if piece == PieceBlackQueen {
+			bQueen = true
+		}
+		// Bishops and knights counts as minor pieces (https://chessdelta.com/minor-pieces-and-major-pieces-in-chess/)
+		if piece == PieceWhiteBishop || piece == PieceWhiteKnight {
+			wCount++
+		}
+		if piece == PieceBlackBishop || piece == PieceBlackKnight {
+			bCount++
+		}
+	}
+
+	if (!wQueen || wCount <= 1) && (!bQueen || bCount <= 1) {
+		return true
+	}
+	return false
+}

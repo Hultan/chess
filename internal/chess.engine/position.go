@@ -15,6 +15,15 @@ func Pos(i int) Position {
 	return Position(i)
 }
 
+// Sym creates a new position from an integer
+// but in a symmetrical position to i
+func Sym(i int) Position {
+	if i < 0 || i > 63 {
+		panic("invalid position in Pos()")
+	}
+	return Position(63 - i)
+}
+
 // Alg creates a new position based on a string (ie "b6" or "h3")
 func Alg(alg string) Position {
 	if len(alg) != 2 {

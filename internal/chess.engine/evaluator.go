@@ -1,47 +1,28 @@
 package chess_engine
 
-type Evaluator struct {
-	board *Board
-}
-
-func NewEvaluator(b *Board) *Evaluator {
-	return &Evaluator{b}
-}
-
 // Value returns the board value
-func (e *Evaluator) Value() int {
+func (b *Board) Value() int {
 	value := 0
-	for y := 8; y >= 1; y-- {
-		for x := 1; x <= 8; x++ {
-			pos := XY(x, y)
-			p := e.board.Piece(pos)
-			c := e.board.ColorFromPiece(p)
 
-			if p == PieceNone {
-				continue
-			}
-			pieceValue := 0
-			posValue := 0
-			if c == ColorWhite {
-				pieceValue += e.getBasePieceValue(pos)
-				posValue += e.getPiecePositionBonus(pos)
-			} else {
-				pieceValue += e.getBasePieceValue(pos)
-				posValue += e.getPiecePositionBonus(pos)
-			}
-			// fmt.Printf("%s : val(%d) pos(%d)\n", getPieceName(p), pieceValue, posValue)
-			value += posValue + pieceValue
+	for p := 0; p < 64; p++ {
+		pos := Pos(p)
+
+		piece := b.Piece(pos)
+		if piece == PieceNone {
+			continue
 		}
+
+		pieceValue := b.getPieceValue(piece)
+		posValue := b.getPiecePositionBonus(pos, piece)
+		// fmt.Printf("%s : val(%d) pos(%d)\n", getPieceName(p), pieceValue, posValue)
+		value += posValue + pieceValue
 	}
 
 	return value
 }
 
-// getBasePieceValue returns the base value for the piece at position pos
-func (e *Evaluator) getBasePieceValue(pos Position) int {
-	piece := e.board.Piece(pos)
-	color := e.board.Color(pos)
-
+// getPieceValue returns the base value for the piece at position pos
+func (b *Board) getPieceValue(piece Piece) int {
 	value := 0
 	switch piece {
 	case PieceWhitePawn, PieceBlackPawn:
@@ -57,19 +38,21 @@ func (e *Evaluator) getBasePieceValue(pos Position) int {
 	case PieceWhiteKing, PieceBlackKing:
 		value = 20000.0
 	}
+
+	color := b.ColorFromPiece(piece)
 	if color == ColorBlack {
 		value *= -1
 	}
+
 	return value
 }
 
 // getPiecePositionBonus returns the position bonus for the piece
 // at position pos.
-func (e *Evaluator) getPiecePositionBonus(pos Position) int {
+func (b *Board) getPiecePositionBonus(pos Position, piece Piece) int {
 	var bonusTable [8][8]int
-	color := e.board.Color(pos)
 
-	switch e.board.Piece(pos) {
+	switch piece {
 	case PieceWhitePawn, PieceBlackPawn:
 		bonusTable = pawnPositionFactor
 	case PieceWhiteKnight, PieceBlackKnight:
@@ -81,7 +64,7 @@ func (e *Evaluator) getPiecePositionBonus(pos Position) int {
 	case PieceWhiteQueen, PieceBlackQueen:
 		bonusTable = queenPositionFactor
 	case PieceWhiteKing, PieceBlackKing:
-		if e.isEndGame() {
+		if b.isEndGame() {
 			bonusTable = kingPositionFactorEnd
 		} else {
 			bonusTable = kingPositionFactorEarlyMid
@@ -91,16 +74,14 @@ func (e *Evaluator) getPiecePositionBonus(pos Position) int {
 	}
 
 	x, y := pos.ToXY()
+	factor := 1
+	color := b.ColorFromPiece(piece)
 	if color == ColorBlack {
-		return -bonusTable[y-1][x-1]
+		// Get the symmetric black position
+		sym := Sym(int(pos))
+		x, y = sym.ToXY()
+		factor = -1
 	}
-	return bonusTable[8-y][x-1]
-}
 
-// TODO : Fix is end game (https://www.chessprogramming.org/Simplified_Evaluation_Function)
-//    1. Both sides have no queens or
-//    2. Every side which has a queen has additionally no other pieces or one minor piece maximum.
-// isEndGame currently returns true
-func (e *Evaluator) isEndGame() bool {
-	return false
+	return factor * bonusTable[8-y][x-1]
 }
