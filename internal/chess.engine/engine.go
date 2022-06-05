@@ -33,8 +33,8 @@ func NewBoard(setup bool) *Board {
 		b.setPiece(PieceBlackRook, 63)
 
 		for i := 0; i < 8; i++ {
-			b.setPiece(PieceBlackPawn, 48+i)
-			b.setPiece(PieceWhitePawn, 8+i)
+			b.setPiece(PieceBlackPawn, 48+Pos(i))
+			b.setPiece(PieceWhitePawn, 8+Pos(i))
 		}
 
 		b.setPiece(PieceWhiteRook, 0)
@@ -83,7 +83,7 @@ func (b *Board) Copy() *Board {
 	return nb
 }
 
-func (b *Board) MovePiece(from, to int) *Board {
+func (b *Board) MovePiece(from, to Position) *Board {
 	if e := b.checkValidMoveBasic(from, to); e != nil {
 		panic(e)
 	}
@@ -114,7 +114,7 @@ func (b *Board) MovePiece(from, to int) *Board {
 	return nb
 }
 
-func (b *Board) Piece(index int) Piece {
+func (b *Board) Piece(index Position) Piece {
 	i, m := index/16, index%16
 
 	p := uint64(0b1111 << (m * 4))
@@ -123,11 +123,9 @@ func (b *Board) Piece(index int) Piece {
 	return Piece(p2)
 }
 
-func (b *Board) Color(index int) Color {
+func (b *Board) Color(index Position) Color {
 	p := b.Piece(index)
 	return b.ColorFromPiece(p)
-
-	panic("invalid color")
 }
 
 func (b *Board) ColorFromPiece(p Piece) Color {
@@ -178,19 +176,19 @@ func (b *Board) CastlingRights(c castlingRight) bool {
 // Private functions
 //
 
-func (b *Board) setPiece(piece Piece, index int) {
+func (b *Board) setPiece(piece Piece, index Position) {
 	i, m := index/16, index%16
 
 	b.board[i] = b.board[i] | uint64(piece<<(m*4))
 }
 
-func (b *Board) removePiece(index int) {
+func (b *Board) removePiece(index Position) {
 	i, m := index/16, index%16
 
 	b.board[i] &= ^uint64(0b1111 << (m * 4))
 }
 
-func (b *Board) checkValidMoveBasic(from, to int) error {
+func (b *Board) checkValidMoveBasic(from, to Position) error {
 	f, t := b.Color(from), b.Color(to)
 	if f != b.ToMove() {
 		return errors.New("moving out of turn")
@@ -247,7 +245,7 @@ func (b *Board) setHalfMoveCount(c int) {
 	b.extra |= uint32(c) << 1
 }
 
-func (b *Board) increaseHalfMoveCount(oldBoard *Board, from, to int) {
+func (b *Board) increaseHalfMoveCount(oldBoard *Board, from, to Position) {
 	if oldBoard.Piece(from) == PieceWhitePawn || oldBoard.Piece(from) == PieceBlackPawn {
 		b.setHalfMoveCount(0)
 	} else if oldBoard.Color(to) != ColorNone && oldBoard.Color(from) != oldBoard.Color(to) {
@@ -293,24 +291,24 @@ func (b *Board) resetCastlingRights() {
 	b.extra |= 0b1111_00000000
 }
 
-func (b *Board) checkCastlingRights(from int) {
-	if from == alg("a1") {
+func (b *Board) checkCastlingRights(from Position) {
+	if from == Alg("a1") {
 		b.removeCastlingRights(CastlingWhiteQueen)
 	}
-	if from == alg("h1") {
+	if from == Alg("h1") {
 		b.removeCastlingRights(CastlingWhiteKing)
 	}
-	if from == alg("e1") {
+	if from == Alg("e1") {
 		b.removeCastlingRights(CastlingWhiteKing)
 		b.removeCastlingRights(CastlingWhiteQueen)
 	}
-	if from == alg("a8") {
+	if from == Alg("a8") {
 		b.removeCastlingRights(CastlingBlackQueen)
 	}
-	if from == alg("h8") {
+	if from == Alg("h8") {
 		b.removeCastlingRights(CastlingBlackKing)
 	}
-	if from == alg("e8") {
+	if from == Alg("e8") {
 		b.removeCastlingRights(CastlingBlackKing)
 		b.removeCastlingRights(CastlingBlackQueen)
 	}
@@ -320,7 +318,7 @@ func (b *Board) checkCastlingRights(from int) {
 // En passant
 //
 
-func (b *Board) checkEnPassant(oldBoard *Board, from, to int) {
+func (b *Board) checkEnPassant(oldBoard *Board, from, to Position) {
 	if oldBoard.Piece(from) == PieceWhitePawn && from >= 8 && from <= 15 && to-from == 16 {
 		b.setEnPassantTarget(from - 8)
 		return
@@ -332,7 +330,7 @@ func (b *Board) checkEnPassant(oldBoard *Board, from, to int) {
 	b.clearEnPassantTarget()
 }
 
-func (b *Board) setEnPassantTarget(i int) {
+func (b *Board) setEnPassantTarget(i Position) {
 	b.extra &= 0b11111111_11111110_00001111_11111111
 	b.extra |= uint32(i) << 12
 }

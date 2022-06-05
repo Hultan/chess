@@ -13,7 +13,7 @@ func (e *Evaluator) Value() int {
 	value := 0
 	for y := 8; y >= 1; y-- {
 		for x := 1; x <= 8; x++ {
-			pos := xy(x, y)
+			pos := XY(x, y)
 			p := e.board.Piece(pos)
 			c := e.board.ColorFromPiece(p)
 
@@ -38,7 +38,7 @@ func (e *Evaluator) Value() int {
 }
 
 // getBasePieceValue returns the base value for the piece at position pos
-func (e *Evaluator) getBasePieceValue(pos int) int {
+func (e *Evaluator) getBasePieceValue(pos Position) int {
 	piece := e.board.Piece(pos)
 	color := e.board.Color(pos)
 
@@ -65,7 +65,7 @@ func (e *Evaluator) getBasePieceValue(pos int) int {
 
 // getPiecePositionBonus returns the position bonus for the piece
 // at position pos.
-func (e *Evaluator) getPiecePositionBonus(pos int) int {
+func (e *Evaluator) getPiecePositionBonus(pos Position) int {
 	var bonusTable [8][8]int
 	color := e.board.Color(pos)
 
@@ -90,7 +90,7 @@ func (e *Evaluator) getPiecePositionBonus(pos int) int {
 		return 0
 	}
 
-	x, y := toXY(pos)
+	x, y := pos.ToXY()
 	if color == ColorBlack {
 		return -bonusTable[y-1][x-1]
 	}

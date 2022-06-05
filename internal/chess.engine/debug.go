@@ -8,7 +8,7 @@ func (b *Board) print() string {
 	rank := ""
 	board := ""
 	for i := 0; i < 64; i++ {
-		p := b.Piece(i)
+		p := b.Piece(Pos(i))
 		l := getLetterFromPiece(p)
 		rank += l
 		if (i+1)%8 == 0 {
